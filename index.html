@@ -340,6 +340,18 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
   .mask-line > span{transform:none !important}
   #gl{opacity:.85}
 }
+
+/* WebGL fallback — the complete DOM story stays readable with no 3D world.
+   Same "everything visible, nothing waiting on a reveal trigger" treatment
+   as reduced-motion, plus hiding the now-inert visual layers. */
+body.no-webgl #gl,body.no-webgl #haze,body.no-webgl #vignette,
+body.no-webgl #grain,body.no-webgl .deva-accent,body.no-webgl .cursor,
+body.no-webgl #foreground-sky,body.no-webgl .peek{display:none}
+body.no-webgl{background:linear-gradient(180deg,#0a140d,#0c1811 40%,#152a20)}
+body.no-webgl .word{opacity:1 !important;transform:none !important}
+body.no-webgl [data-rv]{opacity:1 !important;transform:none !important}
+body.no-webgl .mask-line > span{transform:none !important}
+body.no-webgl #pre{display:none}
 </style>
 </head>
 <body>
@@ -825,12 +837,23 @@ function grainDataUrl() {
 
 /* ============================================== 4 · scene setup */
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
-renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
-renderer.setClearColor(0x070d09, 1);
+/* WebGL can legitimately fail to initialize (old browser, disabled GPU,
+   context limit, a locked-down environment). If it does, the rest of this
+   script must still run: DOM chrome, reveals, nav, and the full readable
+   story are the fallback — not a dead page stuck behind a preloader. */
+let webglOK = true, renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.setClearColor(0x070d09, 1);
+} catch (e) {
+  webglOK = false;
+  document.body.classList.add('no-webgl');
+  console.warn('The Hollow: WebGL unavailable, falling back to static DOM story.', e);
+}
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x0c1710, 0.062);
@@ -1324,7 +1347,7 @@ function applyCamera() {
 
 /* ============================================== 15 · scroll wiring */
 const SECS = [].slice.call(document.querySelectorAll('[data-cam]'));
-let anchors = [], maxScroll = 1, activeSec = 0;
+let anchors = [], maxScroll = 1, activeSec = -1;
 function measure() {
   maxScroll = Math.max(1, document.documentElement.scrollHeight - vpH());
   anchors = SECS.map((el, i) => {
@@ -1447,9 +1470,11 @@ function promoteForeground(chapterId) {
 function resize() {
   const w = vpW(), h = vpH();
   document.documentElement.style.setProperty('--vw', w + 'px');
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h; camera.updateProjectionMatrix();
-  if (typeof setupBloomTargets === 'function') setupBloomTargets();
+  if (webglOK) {
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    setupBloomTargets();
+  }
   measure();
 }
 addEventListener('resize', resize, { passive:true });
@@ -1554,6 +1579,7 @@ function setupBloomTargets() {
 }
 
 function renderBloomPass() {
+  if (!webglOK) return;
   /* 1. render the live scene exactly once, into an offscreen full-res target */
   renderer.setRenderTarget(sceneRT);
   renderer.render(scene, camera);
