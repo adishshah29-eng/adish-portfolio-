@@ -687,19 +687,19 @@ function applyFbmGrain(g, w, h, scale, strength, bias) {
 
 /* ============================================== 2 · palette */
 const C = {
-  ink:       0x08100b,
-  canopy:    0x1a3a1e,
-  moss:      0x3d5f36,
-  moss2:     0x5a7d4a,
-  leaf:      0x7ea86a,
-  jade:      0x7fd68a,
-  gold:      0xd9b465,
-  sun:       0xf6d47a,
-  stone:     0x6a6a5a,
-  stoneDark: 0x36372f,
-  water:     0x2a4a55,
-  mist:      0xc9d4b9,
-  lotus:     0xe7b8c7,
+  ink:       0x1a2b1e,
+  canopy:    0x3d6a3a,
+  moss:      0x4f7d42,
+  moss2:     0x6a9450,
+  leaf:      0x8ec46e,
+  jade:      0x9fe89a,
+  gold:      0xffcc44,
+  sun:       0xffeeb0,
+  stone:     0x6e7a5e,
+  stoneDark: 0x445238,
+  water:     0x1f4a3a,
+  mist:      0xd8e8b8,
+  lotus:     0xffd0e0,
 };
 
 /* ============================================== 3 · procedural textures */
@@ -784,25 +784,33 @@ function texStone() {
    horizon so it blends into the fog color instead of reading as a bright dome */
 function texSky() {
   const c = makeCanvas(1024), g = c.getContext('2d');
+  /* pale yellow-green sunlit haze at the top, deepening to forest green at
+     the horizon — a humid, bright jungle sky, not a night dome */
   const grad = g.createLinearGradient(0,0,0,1024);
-  grad.addColorStop(0,'#1c2e18');
-  grad.addColorStop(.4,'#162318');
-  grad.addColorStop(.75,'#0e1811');
-  grad.addColorStop(1,'#070d09');
+  grad.addColorStop(0,'#eaf0b8');
+  grad.addColorStop(.28,'#cfe098');
+  grad.addColorStop(.6,'#8fb868');
+  grad.addColorStop(1,'#3d6a3a');
   g.fillStyle = grad; g.fillRect(0,0,1024,1024);
-  /* concentrated warm sunbeam glow — the scene's one bright note, like Kage's moon */
-  for (let i=0;i<5;i++){
-    const x = 380 + srand()*260, y = 60 + srand()*200;
-    const r = 100 + srand()*170;
+  /* blazing sun + broad scattered glow, top-right, piercing the haze */
+  const sx = 700, sy = 160;
+  const sunGrad = g.createRadialGradient(sx,sy,0,sx,sy,60);
+  sunGrad.addColorStop(0,'rgba(255,250,225,1)');
+  sunGrad.addColorStop(1,'rgba(255,238,176,0)');
+  g.fillStyle = sunGrad; g.beginPath(); g.arc(sx,sy,60,0,6.28); g.fill();
+  for (let i=0;i<6;i++){
+    const x = 520 + srand()*380, y = 40 + srand()*280;
+    const r = 140 + srand()*220;
     const grad2 = g.createRadialGradient(x,y,0,x,y,r);
-    grad2.addColorStop(0,'rgba(255,214,132,.5)');
-    grad2.addColorStop(1,'rgba(255,214,132,0)');
+    grad2.addColorStop(0,'rgba(255,238,176,.55)');
+    grad2.addColorStop(1,'rgba(255,238,176,0)');
     g.fillStyle = grad2; g.beginPath(); g.arc(x,y,r,0,6.28); g.fill();
   }
-  /* leaf silhouettes — darker, so the canopy reads as near-black mass */
+  /* leaf silhouettes — mid-tone forest green, readable against the bright
+     haze without turning into a black mass */
   for (let i=0;i<1400;i++){
     const y = srand()*1024;
-    g.fillStyle = `rgba(${4+srand()*10|0},${9+srand()*16|0},${3+srand()*8|0},${.3+srand()*.4})`;
+    g.fillStyle = `rgba(${28+srand()*30|0},${58+srand()*40|0},${26+srand()*26|0},${.3+srand()*.4})`;
     g.beginPath(); g.ellipse(srand()*1024, y, 3+srand()*10, 1.5+srand()*6, srand()*6.28, 0, 6.28); g.fill();
   }
   return c;
@@ -828,7 +836,7 @@ function texLeaf() {
    forest's foliage detail instead of one draw call per blob */
 function texLeafCard() {
   const c = makeCanvas(128), g = c.getContext('2d');
-  const tones = ['#1c2f18','#22381d','#2d4a2a','#345a30'];
+  const tones = ['#2e5222','#3a6a2c','#4a8038','#5a9440'];
   const drawLeaf = (cx,cy,s,rot,tone) => {
     g.save(); g.translate(cx,cy); g.rotate(rot); g.scale(s,s);
     g.fillStyle = tone;
@@ -917,7 +925,7 @@ try {
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
-  renderer.setClearColor(0x070d09, 1);
+  renderer.setClearColor(0x2a402c, 1);
 } catch (e) {
   webglOK = false;
   document.body.classList.add('no-webgl');
@@ -925,8 +933,10 @@ try {
 }
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0c1710, 0.062);
-const FOG_BY_CHAPTER = [0.062, 0.05, 0.044, 0.058, 0.036, 0.03];
+/* dense, bright, humid mist — scatters the sunlight and hides the far
+   background clipping instead of pitch-black horizon fog */
+scene.fog = new THREE.FogExp2(0x2a402c, 0.045);
+const FOG_BY_CHAPTER = [0.05, 0.04, 0.036, 0.046, 0.03, 0.026];
 
 const camera = new THREE.PerspectiveCamera(38, 1, .35, 240);
 scene.add(camera);
@@ -964,14 +974,14 @@ const WORLD = { leaves: [], fireflies: [], godrays: [], trees: [], sanctuary:nul
   ridgeShape.lineTo(-RW/2, -6);
   const ridge = new THREE.Mesh(
     new THREE.ShapeGeometry(ridgeShape),
-    new THREE.MeshBasicMaterial({ color: 0x0a1610, fog: true, depthWrite: true })
+    new THREE.MeshBasicMaterial({ color: 0x2e4a2a, fog: true, depthWrite: true })
   );
   ridge.position.set(0, 4, RZ);
   scene.add(ridge);
 
   /* mid-canopy silhouette — a lower, closer band of blob clusters reading as
      distant treeline, separate from the interactive/lit trees in front of it */
-  const midMat = new THREE.MeshBasicMaterial({ color: 0x0d1a12, fog: true });
+  const midMat = new THREE.MeshBasicMaterial({ color: 0x33552e, fog: true });
   for (let i=0;i<20;i++){
     const x = -70 + i*7.4 + (srand()-.5)*4;
     const z = -34 - srand()*8;
@@ -989,7 +999,7 @@ const WORLD = { leaves: [], fireflies: [], godrays: [], trees: [], sanctuary:nul
   mossTex.repeat.set(10,10);
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(180, 180, 32, 32),
-    new THREE.MeshStandardMaterial({ map: mossTex, roughness:.94, metalness:0, color:0x394b2c })
+    new THREE.MeshStandardMaterial({ map: mossTex, roughness:.9, metalness:0, color:0x5a7a42 })
   );
   ground.rotation.x = -Math.PI/2;
   /* gently undulate the terrain */
@@ -1008,8 +1018,8 @@ function buildSanctuary() {
   const g = new THREE.Group();
   const stoneTex = toTex(texStone(), { wrap:true, aniso:8 });
   stoneTex.repeat.set(1,3);
-  const stoneMat = new THREE.MeshStandardMaterial({ map: stoneTex, roughness:.88, metalness:.04, color:0x5e5c4c });
-  const stoneMatDark = new THREE.MeshStandardMaterial({ map: stoneTex.clone(), roughness:.94, metalness:.02, color:0x38362a });
+  const stoneMat = new THREE.MeshStandardMaterial({ map: stoneTex, roughness:.86, metalness:.03, color:0x7a8266 });
+  const stoneMatDark = new THREE.MeshStandardMaterial({ map: stoneTex.clone(), roughness:.92, metalness:.02, color:0x525c40 });
   stoneMatDark.map.wrapS = stoneMatDark.map.wrapT = THREE.RepeatWrapping;
   stoneMatDark.map.repeat.set(1,2);
 
@@ -1113,10 +1123,10 @@ buildSanctuary();
     uniforms: {
       uTime:   { value: 0 },
       uRadius: { value: POND_R },
-      uSunDir: { value: new THREE.Vector3(-8, 22, -6).normalize() },
-      uDeep:   { value: new THREE.Color(0x152c2c) },
-      uShallow:{ value: new THREE.Color(0x3f6a63) },
-      uSky:    { value: new THREE.Color(0x9fc98f) },
+      uSunDir: { value: new THREE.Vector3(20, 30, -15).normalize() },
+      uDeep:   { value: new THREE.Color(0x1f4a3a) },
+      uShallow:{ value: new THREE.Color(0x5a9a6a) },
+      uSky:    { value: new THREE.Color(0xd8e8b8) },
     },
     vertexShader: `
       uniform float uTime;
@@ -1200,7 +1210,7 @@ buildSanctuary();
      plus a brighter, foamier base where it meets the pond */
   const wfMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0xcfe6e2) } },
+    uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0xf0f8dc) } },
     vertexShader: `
       varying vec2 vUv;
       void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
@@ -1241,7 +1251,7 @@ buildSanctuary();
   const branchMat = trunkMat;
   const coreMats = [0,1,2,3].map(i =>
     new THREE.MeshStandardMaterial({
-      color: 0x16260f + (i*0x040c04), roughness:.95, metalness:0, flatShading:true
+      color: 0x2e5222 + (i*0x081206), roughness:.92, metalness:0, flatShading:true
     })
   );
   const leafTex = toTex(texLeafCard(), { aniso: 4 });
@@ -1340,17 +1350,19 @@ buildSanctuary();
   scene.add(leafMesh);
 }
 
-/* ============================================== 10 · god-rays (additive shafts) */
+/* ============================================== 10 · god-rays (additive shafts, angled with
+   the top-right sun — steep shafts piercing down-left through the canopy) */
 {
-  const rayTex = toTex(texGlow('rgba(255,230,150,.75)','rgba(220,180,80,.14)'));
-  for (let i=0;i<6;i++){
+  const rayTex = toTex(texGlow('rgba(255,250,220,.85)','rgba(255,230,150,.16)'));
+  for (let i=0;i<8;i++){
     const ray = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.6, 22),
+      new THREE.PlaneGeometry(3.0, 26),
       new THREE.MeshBasicMaterial({ map: rayTex, transparent:true, blending: THREE.AdditiveBlending,
-        depthWrite:false, opacity:.32 })
+        depthWrite:false, opacity:.4 })
     );
-    ray.position.set(-8 + i*3.2 + (Math.random()-.5)*1.6, 10, -18 + (Math.random()-.5)*4);
-    ray.rotation.z = -.24 + (Math.random()-.5)*.14;
+    ray.position.set(2 + i*3.0 + (Math.random()-.5)*2, 13 + Math.random()*3, -16 + (Math.random()-.5)*10);
+    ray.rotation.z = -.62 + (Math.random()-.5)*.12;
+    ray.rotation.y = .3 + (Math.random()-.5)*.2;
     scene.add(ray); WORLD.godrays.push(ray);
   }
 }
@@ -1372,8 +1384,8 @@ buildSanctuary();
   geo.setAttribute('aOff',     new THREE.BufferAttribute(off, 1));
 
   const mat = new THREE.PointsMaterial({
-    map: toTex(texFirefly()), size: .34, sizeAttenuation:true,
-    transparent:true, blending: THREE.AdditiveBlending, depthWrite:false, color: 0xffe3a0
+    map: toTex(texFirefly()), size: .6, sizeAttenuation:true,
+    transparent:true, blending: THREE.AdditiveBlending, depthWrite:false, color: 0xffdd44
   });
   const pts = new THREE.Points(geo, mat);
   scene.add(pts); WORLD.fireflies = { pts, pos, off, N };
@@ -1401,16 +1413,17 @@ buildSanctuary();
   scene.add(pts); WORLD.leaves = { pts, pos, seed, N };
 }
 
-/* ============================================== 13 · lights — one warm rim key from
-   behind the sanctuary (the sunbeam), a cold low ambient fill, and a jade practical */
+/* ============================================== 13 · lights — a blazing warm sun piercing
+   the canopy from the top right, a bright pale-yellow-green sky / dark-forest
+   ground hemisphere for ambient bounce, and a soft green fill near the water */
 {
-  scene.add(new THREE.HemisphereLight(0x3a5a44, 0x0a120b, .16));
-  const sun = new THREE.DirectionalLight(0xffd68a, 1.85);
-  sun.position.set(4, 19, -42);
-  sun.target.position.set(0, 3, -14);
+  scene.add(new THREE.HemisphereLight(0xe8f0b0, 0x14260f, .55));
+  const sun = new THREE.DirectionalLight(0xffeedd, 3.2);
+  sun.position.set(20, 30, -15);
+  sun.target.position.set(0, 0, -18);
   scene.add(sun); scene.add(sun.target); WORLD.sun = sun;
-  const fill = new THREE.PointLight(C.jade, .85, 24, 1.9);
-  fill.position.set(0, 3.5, -19);
+  const fill = new THREE.PointLight(0xaaffaa, 1.1, 22, 1.6);
+  fill.position.set(-2, 2.5, -14);
   scene.add(fill); WORLD.jadeFill = fill;
 }
 
@@ -1643,7 +1656,7 @@ let sceneRTW = 1, sceneRTH = 1;
 let bloomLevels = [];
 
 const brightMat = new THREE.ShaderMaterial({
-  uniforms: { tDiffuse: { value: null }, uThreshold: { value: .62 }, uKnee: { value: .32 } },
+  uniforms: { tDiffuse: { value: null }, uThreshold: { value: .86 }, uKnee: { value: .3 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }`,
   fragmentShader: `
     precision highp float;
