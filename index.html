@@ -693,6 +693,36 @@ function texLeaf() {
   return c;
 }
 
+/* vertical bark streaks + moss creep, for trunks and branches */
+function texBark() {
+  const c = makeCanvas(256), g = c.getContext('2d');
+  const grad = g.createLinearGradient(0,0,256,0);
+  grad.addColorStop(0,'#3a2a1a'); grad.addColorStop(.5,'#2c2013'); grad.addColorStop(1,'#20160a');
+  g.fillStyle = grad; g.fillRect(0,0,256,256);
+  g.lineCap = 'round';
+  for (let i=0;i<46;i++){
+    const x0 = srand()*256;
+    g.strokeStyle = `rgba(${8+srand()*10|0},${5+srand()*8|0},${2+srand()*6|0},${.35+srand()*.35})`;
+    g.lineWidth = .6+srand()*1.8;
+    g.beginPath(); let cx = x0; g.moveTo(cx,0);
+    for (let y=0;y<=256;y+=14){ cx += (srand()-.5)*7; g.lineTo(cx,y); }
+    g.stroke();
+  }
+  for (let i=0;i<10;i++){
+    g.strokeStyle = `rgba(90,70,45,${.15+srand()*.2})`; g.lineWidth = .5+srand();
+    const x0 = srand()*256; g.beginPath(); let cx = x0; g.moveTo(cx,0);
+    for (let y=0;y<=256;y+=18){ cx += (srand()-.5)*8; g.lineTo(cx,y); }
+    g.stroke();
+  }
+  /* moss creeping up from the base */
+  for (let i=0;i<60;i++){
+    const yy = 170 + srand()*86;
+    g.fillStyle = `rgba(${34+srand()*30|0},${70+srand()*40|0},${28+srand()*24|0},${.22+srand()*.35})`;
+    g.beginPath(); g.arc(srand()*256, yy, 3+srand()*10, 0, 6.28); g.fill();
+  }
+  return c;
+}
+
 /* water ripple */
 function texWater() {
   const c = makeCanvas(256), g = c.getContext('2d');
@@ -722,7 +752,7 @@ function grainDataUrl() {
 
 /* ============================================== 4 · scene setup */
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, alpha:false, powerPreference:'high-performance' });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
 renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.setClearColor(C.ink, 1);
@@ -852,16 +882,81 @@ function buildSanctuary() {
 }
 buildSanctuary();
 
-/* ============================================== 8 · lotus pond + waterfall */
+/* ============================================== 8 · lotus pond + waterfall (real shaders) */
 {
-  const waterTex = toTex(texWater(), { wrap:true, aniso:8 });
-  waterTex.repeat.set(4,4);
-  const pond = new THREE.Mesh(
-    new THREE.CircleGeometry(6, 42),
-    new THREE.MeshStandardMaterial({ map: waterTex, roughness:.28, metalness:.65,
-      color: 0x4e7a7a, transparent:true, opacity:.94 })
-  );
-  pond.rotation.x = -Math.PI/2; pond.position.set(-1, .18, -8);
+  const POND_R = 6, POND_CX = -1, POND_CZ = -8;
+
+  /* live GLSL water: analytic ripple displacement + fresnel + specular + soft
+     circular edge, so the surface actually moves and catches light instead
+     of scrolling a flat texture */
+  const pondMat = new THREE.ShaderMaterial({
+    transparent: true,
+    uniforms: {
+      uTime:   { value: 0 },
+      uRadius: { value: POND_R },
+      uSunDir: { value: new THREE.Vector3(-8, 22, -6).normalize() },
+      uDeep:   { value: new THREE.Color(0x152c2c) },
+      uShallow:{ value: new THREE.Color(0x3f6a63) },
+      uSky:    { value: new THREE.Color(0x9fc98f) },
+    },
+    vertexShader: `
+      uniform float uTime;
+      varying vec3 vWorldPos;
+      varying vec3 vNormalW;
+      varying vec2 vLocal;
+      float waveH(vec2 p, float t){
+        float h = 0.0;
+        h += 0.035*sin(p.x*1.30 + p.y*0.90 + t*1.10);
+        h += 0.022*sin(p.x*-2.10 + p.y*1.70 - t*0.80);
+        h += 0.014*sin(p.x*3.40 + p.y*-2.60 + t*1.60);
+        return h;
+      }
+      vec2 waveGrad(vec2 p, float t){
+        float e = 0.02;
+        float hx = (waveH(p+vec2(e,0.0),t) - waveH(p-vec2(e,0.0),t)) / (2.0*e);
+        float hy = (waveH(p+vec2(0.0,e),t) - waveH(p-vec2(0.0,e),t)) / (2.0*e);
+        return vec2(hx,hy);
+      }
+      void main(){
+        vLocal = position.xy;
+        vec3 pos = position;
+        pos.z += waveH(position.xy, uTime);
+        vec2 grad = waveGrad(position.xy, uTime);
+        vec3 n = normalize(vec3(-grad.x, -grad.y, 1.0));
+        vNormalW = normalize(mat3(modelMatrix) * n);
+        vec4 world = modelMatrix * vec4(pos, 1.0);
+        vWorldPos = world.xyz;
+        gl_Position = projectionMatrix * viewMatrix * world;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform vec3 uSunDir; uniform vec3 uDeep; uniform vec3 uShallow; uniform vec3 uSky;
+      uniform float uRadius; uniform float uTime;
+      varying vec3 vWorldPos; varying vec3 vNormalW; varying vec2 vLocal;
+      void main(){
+        float dist = length(vLocal);
+        if (dist > uRadius) discard;
+        vec3 N = normalize(vNormalW);
+        vec3 V = normalize(cameraPosition - vWorldPos);
+        float fresnel = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 3.0);
+        vec3 base = mix(uDeep, uShallow, smoothstep(0.0, uRadius, dist));
+        vec3 color = mix(base, uSky, fresnel * 0.55);
+        vec3 L = normalize(uSunDir);
+        vec3 R = reflect(-L, N);
+        float spec = pow(max(dot(R, V), 0.0), 60.0);
+        color += vec3(1.0, 0.95, 0.8) * spec * 0.85;
+        float shimmer = sin(vLocal.x*4.0 + vLocal.y*3.0 + uTime*1.4) * 0.5 + 0.5;
+        color += uShallow * shimmer * 0.035;
+        float edge = smoothstep(uRadius*0.86, uRadius, dist);
+        color = mix(color, vec3(0.85,0.92,0.86), edge*0.5);
+        float alpha = mix(0.86, 0.98, fresnel);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  });
+  const pond = new THREE.Mesh(new THREE.PlaneGeometry(POND_R*2+1, POND_R*2+1, 72, 72), pondMat);
+  pond.rotation.x = -Math.PI/2; pond.position.set(POND_CX, .18, POND_CZ);
   scene.add(pond); WORLD.pond = pond;
 
   /* lotus pads */
@@ -872,46 +967,115 @@ buildSanctuary();
     );
     pad.rotation.x = -Math.PI/2;
     const a = Math.random()*Math.PI*2, r = 1 + Math.random()*4.4;
-    pad.position.set(-1+Math.cos(a)*r, .2, -8+Math.sin(a)*r);
+    pad.position.set(POND_CX+Math.cos(a)*r, .24, POND_CZ+Math.sin(a)*r);
     scene.add(pad);
     if (Math.random()<.3){
       const flower = new THREE.Mesh(new THREE.SphereGeometry(.14, 8, 8),
         new THREE.MeshStandardMaterial({ color: C.lotus, emissive:0x442230, emissiveIntensity:.28 }));
-      flower.position.copy(pad.position); flower.position.y = .28;
+      flower.position.copy(pad.position); flower.position.y = .32;
       scene.add(flower);
     }
   }
 
-  /* waterfall — vertical translucent sheet with animated UV */
-  const wfMat = new THREE.MeshBasicMaterial({ map: waterTex.clone(), transparent:true,
-    opacity:.42, color:0xbcd6d8, blending: THREE.AdditiveBlending, depthWrite:false });
-  wfMat.map.wrapS = wfMat.map.wrapT = THREE.RepeatWrapping;
-  wfMat.map.repeat.set(1,4);
-  const wf = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 8), wfMat);
+  /* waterfall — live GLSL falling veil: two counter-scrolling streak layers
+     plus a brighter, foamier base where it meets the pond */
+  const wfMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0xcfe6e2) } },
+    vertexShader: `
+      varying vec2 vUv;
+      void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime; uniform vec3 uColor;
+      varying vec2 vUv;
+      void main(){
+        vec2 uv = vUv;
+        float flow = uv.y*7.0 - uTime*1.7;
+        float n1 = sin(flow + sin(uv.x*20.0+uTime*0.7)*0.7)*0.5+0.5;
+        float n2 = sin(flow*2.3 - uv.x*11.0 + uTime*1.2)*0.5+0.5;
+        float streak = pow(n1*0.6+n2*0.4, 2.0);
+        float edgeFade = smoothstep(0.0,0.14,uv.x)*smoothstep(1.0,0.86,uv.x);
+        float baseFoam = smoothstep(0.0, 0.22, uv.y) * (1.0 - smoothstep(0.0,0.30,uv.y)) * 0.6;
+        float alpha = (streak*edgeFade*0.55) + baseFoam*edgeFade;
+        vec3 col = uColor + streak*0.28 + baseFoam*0.5;
+        gl_FragColor = vec4(col, clamp(alpha,0.0,1.0));
+      }
+    `,
+  });
+  const wf = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 8, 1, 24), wfMat);
   wf.position.set(-6.5, 4.5, -12); wf.rotation.y = .3;
   scene.add(wf); WORLD.waterfall = wf;
 }
 
-/* ============================================== 9 · canopy trees (silhouette planes) */
+/* ============================================== 9 · canopy trees (bark trunk + branches + layered canopy) */
 {
-  const treeTex = toTex(texLeaf(), { aniso: 4 });
-  const trunkMat = new THREE.MeshStandardMaterial({ color:0x2a1e14, roughness:.95 });
+  const barkTex = toTex(texBark(), { wrap:true, aniso:8 });
+  barkTex.repeat.set(1,2);
+  const trunkMat = new THREE.MeshStandardMaterial({ map: barkTex, roughness:.96, metalness:0 });
+  const branchMat = trunkMat;
+  const canopyMats = [0,1,2,3].map(i =>
+    new THREE.MeshStandardMaterial({
+      color: 0x274a1e + (i*0x061006), roughness:.9, metalness:0, flatShading:true
+    })
+  );
+
   for (let i=0;i<26;i++){
     const g = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.28,.42,6+Math.random()*3,7), trunkMat);
-    trunk.position.y = 3; g.add(trunk);
-    /* clumps of foliage as billboarded planes */
-    for (let j=0;j<3;j++){
-      const foliage = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(1.5+Math.random()*.9, 1),
-        new THREE.MeshStandardMaterial({ color: 0x2c4a24 + (Math.random()*0x101010|0), roughness:.94, flatShading:true })
-      );
-      foliage.position.set((Math.random()-.5)*1.2, 5+Math.random()*2, (Math.random()-.5)*1.2);
-      g.add(foliage);
+    const trunkH = 6 + Math.random()*3;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.26,.44,trunkH,9), trunkMat);
+    trunk.position.y = trunkH/2; g.add(trunk);
+
+    /* two side branches reaching toward the canopy mass */
+    const branchCount = 2 + (Math.random() < .5 ? 1 : 0);
+    const branchTips = [];
+    for (let b=0; b<branchCount; b++){
+      const bLen = 2.2 + Math.random()*1.6;
+      const branch = new THREE.Mesh(new THREE.CylinderGeometry(.09,.16,bLen,6), branchMat);
+      const ang = (b/branchCount)*Math.PI*2 + Math.random()*.6;
+      const tilt = .55 + Math.random()*.35;
+      branch.position.set(Math.cos(ang)*.35, trunkH*.72, Math.sin(ang)*.35);
+      branch.rotation.z = Math.cos(ang)*tilt;
+      branch.rotation.x = -Math.sin(ang)*tilt;
+      g.add(branch);
+      branchTips.push(new THREE.Vector3(
+        Math.cos(ang)*(bLen*.85), trunkH*.72 + bLen*.55, Math.sin(ang)*(bLen*.85)
+      ));
     }
+
+    /* layered canopy — a full cluster around the crown, plus one at each branch tip */
+    const crown = [ new THREE.Vector3(0, trunkH*.98, 0), ...branchTips ];
+    crown.forEach((pos, ci) => {
+      const clumps = ci === 0 ? 5 : 2;
+      for (let j=0;j<clumps;j++){
+        const mat = canopyMats[(i+ci+j) % canopyMats.length];
+        const detail = Math.random() < .4 ? 2 : 1;
+        const foliage = new THREE.Mesh(new THREE.IcosahedronGeometry(1.05+Math.random()*.85, detail), mat);
+        foliage.position.set(
+          pos.x + (Math.random()-.5)*1.5,
+          pos.y + (Math.random()-.5)*1.3 + (ci===0?.6:0),
+          pos.z + (Math.random()-.5)*1.5
+        );
+        foliage.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        g.add(foliage);
+      }
+      /* fine twig tufts for closer-range detail */
+      for (let t=0;t<3;t++){
+        const tuft = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(.28+Math.random()*.22, 0),
+          canopyMats[(i+ci+t+1) % canopyMats.length]
+        );
+        tuft.position.set(pos.x+(Math.random()-.5)*2.4, pos.y+(Math.random()-.5)*1.8, pos.z+(Math.random()-.5)*2.4);
+        g.add(tuft);
+      }
+    });
+
     const a = Math.random()*Math.PI*2, r = 14 + Math.random()*38;
     g.position.set(Math.cos(a)*r, 0, -12 + Math.sin(a)*r*.7);
     g.rotation.y = Math.random()*Math.PI;
+    const s = .85 + Math.random()*.4;
+    g.scale.setScalar(s);
     scene.add(g);
   }
 }
@@ -1193,8 +1357,9 @@ function tick(now) {
     WORLD.relicHalo.scale.setScalar(1 + Math.sin(T*.9)*.12);
   }
   if (WORLD.jadeFill) WORLD.jadeFill.intensity = .5 + Math.sin(T*1.5)*.18;
-  /* waterfall UV scroll */
-  if (WORLD.waterfall) WORLD.waterfall.material.map.offset.y = (T*.5) % 1;
+  /* live water: ripple + veil shaders */
+  if (WORLD.pond) WORLD.pond.material.uniforms.uTime.value = T;
+  if (WORLD.waterfall) WORLD.waterfall.material.uniforms.uTime.value = T;
   /* god-rays gentle sway */
   WORLD.godrays.forEach((r,i) => { r.material.opacity = .28 + Math.sin(T*.4 + i)*.09; });
 
