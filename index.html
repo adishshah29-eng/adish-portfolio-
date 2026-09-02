@@ -254,8 +254,24 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
 .ring p{margin:0;color:var(--bone-dim);font-size:14.5px;line-height:1.68}
 @media(max-width:720px){.rings{grid-template-columns:1fr;gap:22px}.ring{grid-template-columns:1fr;gap:8px}}
 
+/* editorial stills — a generated plate floating over the world, TODO: swap
+   the SVG stand-ins under assets/generated/ for real painterly renders */
+.peek{
+  position:absolute;z-index:3;width:clamp(160px,15vw,240px);
+  border:1px solid var(--line);border-radius:2px;overflow:hidden;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.65),0 0 0 1px rgba(0,0,0,.3);
+  background:#0a140d;
+}
+.peek img{display:block;width:100%;height:auto;opacity:.94}
+.peek-grove{top:clamp(60px,9vh,120px);right:clamp(16px,3.4vw,56px)}
+.peek-sanctuary{top:clamp(40px,7vh,90px);right:clamp(16px,3.4vw,56px)}
+.peek-afterlight{top:clamp(20px,5vh,60px);left:clamp(16px,3.4vw,56px)}
+@media(max-width:900px){.peek{display:none}}
+
 /* ruins — projects */
 .projects{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,3vw,52px)}
+.proj-media{width:100%;aspect-ratio:16/10;border-radius:2px;overflow:hidden;margin-bottom:14px;background:#0a140d}
+.proj-media img{width:100%;height:100%;object-fit:cover;display:block;opacity:.92}
 .proj{
   position:relative;padding:26px 28px 30px;border:1px solid var(--line-soft);
   background:linear-gradient(180deg,rgba(232,236,221,.02),rgba(232,236,221,0));
@@ -417,6 +433,7 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
     <img class="fg-piece" data-edge="bottom-left" src="assets/foreground/fern-frond.svg" alt="" loading="lazy">
     <img class="fg-piece" data-edge="top-left" src="assets/foreground/hanging-vines.svg" alt="" loading="lazy">
   </div>
+  <div class="peek peek-grove" data-rv="fade"><img src="assets/generated/grove-still.svg" alt="" loading="lazy"></div>
   <header class="sec-head">
     <div class="sec-num"><i>01</i>THE GROVE</div>
     <div class="sec-meta"><i>About</i><b>Roots · Rings · Growth</b></div>
@@ -448,6 +465,7 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
   </header>
   <div class="projects">
     <article class="proj" data-rv="up">
+      <div class="proj-media"><img src="assets/generated/proj-visuallylearn.svg" alt="" loading="lazy"></div>
       <div class="proj-head"><div class="proj-num">01</div><div class="proj-tag">React · Supabase · Python</div></div>
       <h3>VisuallyLearn</h3>
       <div class="proj-sub">Physics Visual Learning Platform</div>
@@ -455,6 +473,7 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
       <div class="proj-foot"><span>Shipped · 2025</span><a href="https://physics-visual-learning.vercel.app" target="_blank" rel="noopener">Visit<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 9 9 3M4 3h5v5"/></svg></a></div>
     </article>
     <article class="proj" data-rv="up">
+      <div class="proj-media"><img src="assets/generated/proj-resunova.svg" alt="" loading="lazy"></div>
       <div class="proj-head"><div class="proj-num">02</div><div class="proj-tag">Next.js · Full Stack</div></div>
       <h3>Resunova</h3>
       <div class="proj-sub">AI Resume Tailoring Platform</div>
@@ -462,6 +481,7 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
       <div class="proj-foot"><span>Live · 2026</span><a href="https://resunova.io" target="_blank" rel="noopener">Visit<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 9 9 3M4 3h5v5"/></svg></a></div>
     </article>
     <article class="proj" data-rv="up">
+      <div class="proj-media"><img src="assets/generated/proj-parmar.svg" alt="" loading="lazy"></div>
       <div class="proj-head"><div class="proj-num">03</div><div class="proj-tag">Next.js · Supabase · GSAP</div></div>
       <h3>Parmar Properties</h3>
       <div class="proj-sub">Scroll-animated marketing site + blog CMS</div>
@@ -469,6 +489,7 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
       <div class="proj-foot"><span>Live · 2026</span><a href="https://parmarproperties-two.vercel.app" target="_blank" rel="noopener">Visit<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 9 9 3M4 3h5v5"/></svg></a></div>
     </article>
     <article class="proj" data-rv="up">
+      <div class="proj-media"><img src="assets/generated/proj-callnex.svg" alt="" loading="lazy"></div>
       <div class="proj-head"><div class="proj-num">04</div><div class="proj-tag">Java · Firebase · Android</div></div>
       <h3>Callnex</h3>
       <div class="proj-sub">VoIP Telecalling App for field agents</div>
@@ -484,6 +505,7 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
     <img class="fg-piece" data-edge="bottom-center" src="assets/foreground/lotus-pads.svg" alt="" loading="lazy">
     <img class="fg-piece" data-edge="top-left" src="assets/foreground/leaf-corner.svg" alt="" loading="lazy">
   </div>
+  <div class="peek peek-sanctuary" data-rv="fade"><img src="assets/generated/sanctuary-still.svg" alt="" loading="lazy"></div>
   <header class="sec-head">
     <div class="sec-num"><i>03</i>THE SANCTUARY</div>
     <div class="sec-meta"><i>Experience</i><b>Where work becomes practice</b></div>
@@ -527,6 +549,7 @@ h1,h2,h3{font-weight:400;margin:0;letter-spacing:-.008em;font-family:var(--serif
     <img class="fg-piece" data-edge="bottom-left" src="assets/foreground/dead-leaves.svg" alt="" loading="lazy">
     <img class="fg-piece" data-edge="top-right" src="assets/foreground/canopy-branch.svg" alt="" loading="lazy">
   </div>
+  <div class="peek peek-afterlight" data-rv="fade"><img src="assets/generated/afterlight-still.svg" alt="" loading="lazy"></div>
   <header class="sec-head">
     <div class="sec-num"><i>04</i>AFTERLIGHT</div>
     <div class="sec-meta"><i>Closing</i><b>Get in touch</b></div>
