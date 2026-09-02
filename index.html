@@ -829,6 +829,45 @@ const WORLD = { leaves: [], fireflies: [], godrays: [], sanctuary:null, pond:nul
   scene.add(sky); WORLD.sky = sky;
 }
 
+/* ============================================== 5b · background silhouette layers
+   two atmospheric planes between the sky and the live trees — a distant
+   ridge and a mid-canopy mass — both fog-enabled so they read as layered
+   matte-painting depth instead of a flat dome behind everything live */
+{
+  /* distant ridge — one jagged silhouette arcing behind the sanctuary */
+  const ridgeShape = new THREE.Shape();
+  const RW = 200, RZ = -58;
+  ridgeShape.moveTo(-RW/2, -6);
+  let rx = -RW/2, ry = 6 + srand()*4;
+  ridgeShape.lineTo(rx, ry);
+  while (rx < RW/2) {
+    rx += 8 + srand()*10;
+    ry = 8 + srand()*14;
+    ridgeShape.lineTo(rx, ry);
+  }
+  ridgeShape.lineTo(RW/2, -6);
+  ridgeShape.lineTo(-RW/2, -6);
+  const ridge = new THREE.Mesh(
+    new THREE.ShapeGeometry(ridgeShape),
+    new THREE.MeshBasicMaterial({ color: 0x0a1610, fog: true, depthWrite: true })
+  );
+  ridge.position.set(0, 4, RZ);
+  scene.add(ridge);
+
+  /* mid-canopy silhouette — a lower, closer band of blob clusters reading as
+     distant treeline, separate from the interactive/lit trees in front of it */
+  const midMat = new THREE.MeshBasicMaterial({ color: 0x0d1a12, fog: true });
+  for (let i=0;i<20;i++){
+    const x = -70 + i*7.4 + (srand()-.5)*4;
+    const z = -34 - srand()*8;
+    const s = 3.2 + srand()*2.6;
+    const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(s, 0), midMat);
+    blob.position.set(x, 4 + srand()*2.5, z);
+    blob.rotation.set(srand()*Math.PI, srand()*Math.PI, srand()*Math.PI);
+    scene.add(blob);
+  }
+}
+
 /* ============================================== 6 · ground + moss */
 {
   const mossTex = toTex(texMoss(), { wrap:true, aniso:4 });
