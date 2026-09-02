@@ -1418,6 +1418,7 @@ function resize() {
   document.documentElement.style.setProperty('--vw', w + 'px');
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
+  if (typeof setupBloomTargets === 'function') setupBloomTargets();
   measure();
 }
 addEventListener('resize', resize, { passive:true });
@@ -1435,6 +1436,119 @@ document.querySelectorAll('a, button, .chip, .proj').forEach(el => {
   el.addEventListener('pointerenter', () => cursor.classList.add('hov'));
   el.addEventListener('pointerleave', () => cursor.classList.remove('hov'));
 });
+
+/* ============================================== 19b · restrained bloom (hand-rolled two-pass,
+   using only the already-vendored Three.js core — no ES-module postprocessing
+   import chain, matching the project's no-build-step constraint) */
+const bloomScale = 1/4;
+let bloomW = 1, bloomH = 1;
+const fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const fsScene = new THREE.Scene();
+const fsQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial());
+fsQuad.frustumCulled = false;
+fsScene.add(fsQuad);
+
+function makeRT(w, h, depthBuffer) {
+  return new THREE.WebGLRenderTarget(w, h, {
+    minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+    format: THREE.RGBAFormat, depthBuffer: !!depthBuffer, stencilBuffer: false,
+  });
+}
+let bloomSrcRT, brightRT, blurRT_A, blurRT_B;
+
+const brightMat = new THREE.ShaderMaterial({
+  uniforms: { tDiffuse: { value: null }, uThreshold: { value: .66 } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }`,
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D tDiffuse; uniform float uThreshold;
+    varying vec2 vUv;
+    void main(){
+      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      float l = dot(c, vec3(0.2126,0.7152,0.0722));
+      float k = smoothstep(uThreshold, uThreshold+0.28, l);
+      gl_FragColor = vec4(c*k, 1.0);
+    }
+  `,
+});
+const blurMat = new THREE.ShaderMaterial({
+  uniforms: { tDiffuse: { value: null }, uDir: { value: new THREE.Vector2(1, 0) }, uRes: { value: new THREE.Vector2(1, 1) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }`,
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D tDiffuse; uniform vec2 uDir; uniform vec2 uRes;
+    varying vec2 vUv;
+    void main(){
+      vec2 texel = uDir / uRes;
+      vec3 sum = texture2D(tDiffuse, vUv).rgb * 0.227027;
+      sum += texture2D(tDiffuse, vUv + texel*1.384615).rgb * 0.316216;
+      sum += texture2D(tDiffuse, vUv - texel*1.384615).rgb * 0.316216;
+      sum += texture2D(tDiffuse, vUv + texel*3.230769).rgb * 0.070270;
+      sum += texture2D(tDiffuse, vUv - texel*3.230769).rgb * 0.070270;
+      gl_FragColor = vec4(sum, 1.0);
+    }
+  `,
+});
+const compositeMat = new THREE.MeshBasicMaterial({
+  map: null, transparent: true, blending: THREE.AdditiveBlending,
+  depthTest: false, depthWrite: false,
+});
+
+function setupBloomTargets() {
+  const w = Math.max(2, Math.round(vpW() * bloomScale));
+  const h = Math.max(2, Math.round(vpH() * bloomScale));
+  if (w === bloomW && h === bloomH) return;
+  bloomW = w; bloomH = h;
+  [bloomSrcRT, brightRT, blurRT_A, blurRT_B].forEach(rt => rt && rt.dispose());
+  bloomSrcRT = makeRT(w, h, true);
+  brightRT   = makeRT(w, h, false);
+  blurRT_A   = makeRT(w, h, false);
+  blurRT_B   = makeRT(w, h, false);
+  blurMat.uniforms.uRes.value.set(w, h);
+}
+
+function renderBloomPass() {
+  /* 1. low-res copy of the live scene, used only as the bloom source */
+  renderer.setRenderTarget(bloomSrcRT);
+  renderer.render(scene, camera);
+
+  /* 2. bright-pass */
+  fsQuad.material = brightMat;
+  brightMat.uniforms.tDiffuse.value = bloomSrcRT.texture;
+  renderer.setRenderTarget(brightRT);
+  renderer.render(fsScene, fsCam);
+
+  /* 3. two rounds of separable gaussian blur */
+  fsQuad.material = blurMat;
+  blurMat.uniforms.tDiffuse.value = brightRT.texture;
+  blurMat.uniforms.uDir.value.set(1, 0);
+  renderer.setRenderTarget(blurRT_A);
+  renderer.render(fsScene, fsCam);
+
+  blurMat.uniforms.tDiffuse.value = blurRT_A.texture;
+  blurMat.uniforms.uDir.value.set(0, 1);
+  renderer.setRenderTarget(blurRT_B);
+  renderer.render(fsScene, fsCam);
+
+  blurMat.uniforms.tDiffuse.value = blurRT_B.texture;
+  blurMat.uniforms.uDir.value.set(1, 0);
+  renderer.setRenderTarget(blurRT_A);
+  renderer.render(fsScene, fsCam);
+
+  blurMat.uniforms.tDiffuse.value = blurRT_A.texture;
+  blurMat.uniforms.uDir.value.set(0, 1);
+  renderer.setRenderTarget(blurRT_B);
+  renderer.render(fsScene, fsCam);
+
+  /* 4. full-res render to screen, then an additive composite of the bloom */
+  renderer.setRenderTarget(null);
+  renderer.render(scene, camera);
+  fsQuad.material = compositeMat;
+  compositeMat.map = blurRT_B.texture;
+  renderer.autoClear = false;
+  renderer.render(fsScene, fsCam);
+  renderer.autoClear = true;
+}
 
 /* ============================================== 20 · render loop */
 let scrollY = 0, last = performance.now(), t0 = performance.now();
@@ -1499,7 +1613,7 @@ function tick(now) {
   /* god-rays gentle sway */
   WORLD.godrays.forEach((r,i) => { r.material.opacity = .28 + Math.sin(T*.4 + i)*.09; });
 
-  renderer.render(scene, camera);
+  renderBloomPass();
   requestAnimationFrame(tick);
 }
 
