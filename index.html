@@ -642,6 +642,49 @@ const vpW = () => innerWidth, vpH = () => innerHeight;
 let __seed = 20260902;
 const srand = () => { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };
 
+/* seeded bilinear value-noise + fBm, for genuine per-pixel grain/roughness
+   in the generated textures (bark, stone) instead of random-shape speckle */
+function makeValueNoise2D(size) {
+  const N = size || 64;
+  const grid = new Float32Array(N * N);
+  for (let i=0;i<N*N;i++) grid[i] = srand();
+  const at = (x,y) => grid[((y & (N-1)) * N) + (x & (N-1))];
+  return function (x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf*xf*(3-2*xf), v = yf*yf*(3-2*yf);
+    const a = at(xi,yi), b = at(xi+1,yi), c = at(xi,yi+1), d = at(xi+1,yi+1);
+    return a + (b-a)*u + (c-a)*v + (a-b-c+d)*u*v;
+  };
+}
+function fbm2D(noise, x, y, octaves, lacunarity, gain) {
+  let amp = .5, freq = 1, sum = 0, norm = 0;
+  for (let i=0;i<(octaves||4);i++){
+    sum += amp * noise(x*freq, y*freq);
+    norm += amp;
+    amp *= (gain||.5); freq *= (lacunarity||2);
+  }
+  return sum / norm;
+}
+/* stamps fbm-driven per-pixel grain onto an already-drawn canvas region —
+   real roughness variation rather than randomly placed circles */
+function applyFbmGrain(g, w, h, scale, strength, bias) {
+  const noise = makeValueNoise2D(64);
+  const img = g.getImageData(0, 0, w, h);
+  const d = img.data;
+  const b = bias == null ? 0 : bias;
+  for (let y=0;y<h;y++){
+    for (let x=0;x<w;x++){
+      const n = fbm2D(noise, x*scale, y*scale, 5, 2.1, .52) - .5 + b;
+      const i = (y*w + x) * 4;
+      d[i]   = Math.max(0, Math.min(255, d[i]   + n*strength));
+      d[i+1] = Math.max(0, Math.min(255, d[i+1] + n*strength));
+      d[i+2] = Math.max(0, Math.min(255, d[i+2] + n*strength));
+    }
+  }
+  g.putImageData(img, 0, 0);
+}
+
 /* ============================================== 2 · palette */
 const C = {
   ink:       0x08100b,
@@ -732,6 +775,8 @@ function texStone() {
     g.fillStyle = `rgba(${40+srand()*40|0},${80+srand()*40|0},${30+srand()*30|0},${.3+srand()*.5})`;
     g.beginPath(); g.arc(srand()*512, yy, 2+srand()*5, 0, 6.28); g.fill();
   }
+  /* fbm grain — real per-pixel roughness instead of only shape-based detail */
+  applyFbmGrain(g, 512, 512, .09, 26);
   return c;
 }
 
@@ -827,6 +872,8 @@ function texBark() {
     g.fillStyle = `rgba(${34+srand()*30|0},${70+srand()*40|0},${28+srand()*24|0},${.22+srand()*.35})`;
     g.beginPath(); g.arc(srand()*256, yy, 3+srand()*10, 0, 6.28); g.fill();
   }
+  /* fbm grain — real per-pixel roughness instead of only shape-based detail */
+  applyFbmGrain(g, 256, 256, .16, 22);
   return c;
 }
 
@@ -1569,10 +1616,15 @@ document.querySelectorAll('a, button, .chip, .proj').forEach(el => {
   el.addEventListener('pointerleave', () => cursor.classList.remove('hov'));
 });
 
-/* ============================================== 19b · restrained bloom (hand-rolled two-pass,
-   using only the already-vendored Three.js core — no ES-module postprocessing
-   import chain, matching the project's no-build-step constraint) */
-const bloomScale = 1/4;
+/* ============================================== 19b · cinematic post-processing
+   A real multi-octave bloom (downsample -> blur -> downsample -> ... -> blur,
+   then upsample+combine back up the chain — the same shape as Unreal's/COD's
+   bloom, not a single blurred bright-pass) plus a unified final composite
+   that adds vignette, film grain, and mild chromatic aberration. Everything
+   here uses only the already-vendored Three.js core — no ES-module
+   postprocessing import chain, matching the project's no-build-step
+   constraint. */
+const BLOOM_LEVELS = 4;
 let bloomW = 1, bloomH = 1;
 const fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 const fsScene = new THREE.Scene();
@@ -1586,20 +1638,21 @@ function makeRT(w, h, depthBuffer) {
     format: THREE.RGBAFormat, depthBuffer: !!depthBuffer, stencilBuffer: false,
   });
 }
-let sceneRT, brightRT, blurRT_A, blurRT_B;
+let sceneRT;
 let sceneRTW = 1, sceneRTH = 1;
+let bloomLevels = [];
 
 const brightMat = new THREE.ShaderMaterial({
-  uniforms: { tDiffuse: { value: null }, uThreshold: { value: .66 } },
+  uniforms: { tDiffuse: { value: null }, uThreshold: { value: .62 }, uKnee: { value: .32 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }`,
   fragmentShader: `
     precision highp float;
-    uniform sampler2D tDiffuse; uniform float uThreshold;
+    uniform sampler2D tDiffuse; uniform float uThreshold; uniform float uKnee;
     varying vec2 vUv;
     void main(){
       vec3 c = texture2D(tDiffuse, vUv).rgb;
       float l = dot(c, vec3(0.2126,0.7152,0.0722));
-      float k = smoothstep(uThreshold, uThreshold+0.28, l);
+      float k = smoothstep(uThreshold, uThreshold+uKnee, l);
       gl_FragColor = vec4(c*k, 1.0);
     }
   `,
@@ -1623,9 +1676,40 @@ const blurMat = new THREE.ShaderMaterial({
   `,
 });
 const copyMat = new THREE.MeshBasicMaterial({ map: null, depthTest: false, depthWrite: false });
-const compositeMat = new THREE.MeshBasicMaterial({
+const addMat = new THREE.MeshBasicMaterial({
   map: null, transparent: true, blending: THREE.AdditiveBlending,
   depthTest: false, depthWrite: false,
+});
+/* final composite: scene + combined bloom, ACES already baked in per-object
+   via renderer.toneMapping (so this reads an already-LDR image — no double
+   tonemap), then vignette + grain + a very mild chromatic aberration that
+   only shows up toward the frame edges */
+const finalMat = new THREE.ShaderMaterial({
+  uniforms: {
+    tScene: { value: null }, tBloom: { value: null }, uTime: { value: 0 },
+    uBloom: { value: .62 }, uVignette: { value: 1 }, uGrain: { value: .022 }, uCA: { value: .55 },
+  },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }`,
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D tScene; uniform sampler2D tBloom; uniform float uTime;
+    uniform float uBloom; uniform float uVignette; uniform float uGrain; uniform float uCA;
+    varying vec2 vUv;
+    void main(){
+      vec2 d = vUv - 0.5;
+      float ca = uCA * (0.3 + dot(d,d)*2.6) * 0.0016;
+      vec3 c;
+      c.r = texture2D(tScene, vUv + d*ca).r;
+      c.g = texture2D(tScene, vUv).g;
+      c.b = texture2D(tScene, vUv - d*ca).b;
+      c += texture2D(tBloom, vUv).rgb * uBloom;
+      float vig = smoothstep(1.15, 0.28, length(d*vec2(1.0,0.92))*1.35);
+      c *= mix(1.0, vig, uVignette);
+      float g = fract(sin(dot(vUv*800.0 + uTime*130.0, vec2(12.9898,78.233)))*43758.5453);
+      c += (g-0.5)*uGrain;
+      gl_FragColor = vec4(c, 1.0);
+    }
+  `,
 });
 
 function setupBloomTargets() {
@@ -1639,63 +1723,77 @@ function setupBloomTargets() {
     sceneRT = makeRT(sw, sh, true);
   }
 
-  const w = Math.max(2, Math.round(vpW() * bloomScale));
-  const h = Math.max(2, Math.round(vpH() * bloomScale));
-  if (w === bloomW && h === bloomH) return;
-  bloomW = w; bloomH = h;
-  [brightRT, blurRT_A, blurRT_B].forEach(rt => rt && rt.dispose());
-  brightRT   = makeRT(w, h, false);
-  blurRT_A   = makeRT(w, h, false);
-  blurRT_B   = makeRT(w, h, false);
-  blurMat.uniforms.uRes.value.set(w, h);
+  const w0 = Math.max(2, Math.round(vpW() * .5));
+  const h0 = Math.max(2, Math.round(vpH() * .5));
+  if (w0 === bloomW && h0 === bloomH) return;
+  bloomW = w0; bloomH = h0;
+  bloomLevels.forEach(L => { L.a.dispose(); L.b.dispose(); });
+  bloomLevels = [];
+  let lw = w0, lh = h0;
+  for (let i=0; i<BLOOM_LEVELS; i++){
+    lw = Math.max(2, lw); lh = Math.max(2, lh);
+    bloomLevels.push({ a: makeRT(lw, lh, false), b: makeRT(lw, lh, false), w: lw, h: lh });
+    lw = Math.round(lw/2); lh = Math.round(lh/2);
+  }
 }
 
-function renderBloomPass() {
+function blurInPlace(L) {
+  fsQuad.material = blurMat;
+  blurMat.uniforms.uRes.value.set(L.w, L.h);
+  blurMat.uniforms.tDiffuse.value = L.a.texture;
+  blurMat.uniforms.uDir.value.set(1, 0);
+  renderer.setRenderTarget(L.b);
+  renderer.render(fsScene, fsCam);
+
+  blurMat.uniforms.tDiffuse.value = L.b.texture;
+  blurMat.uniforms.uDir.value.set(0, 1);
+  renderer.setRenderTarget(L.a);
+  renderer.render(fsScene, fsCam);
+}
+
+function renderBloomPass(T) {
   if (!webglOK) return;
   /* 1. render the live scene exactly once, into an offscreen full-res target */
   renderer.setRenderTarget(sceneRT);
   renderer.render(scene, camera);
 
-  /* 2. bright-pass (reads the single scene render, writes low-res) */
+  /* 2. bright-pass into the first (largest) bloom level */
   fsQuad.material = brightMat;
   brightMat.uniforms.tDiffuse.value = sceneRT.texture;
-  renderer.setRenderTarget(brightRT);
+  renderer.setRenderTarget(bloomLevels[0].a);
   renderer.render(fsScene, fsCam);
 
-  /* 3. two rounds of separable gaussian blur */
-  fsQuad.material = blurMat;
-  blurMat.uniforms.tDiffuse.value = brightRT.texture;
-  blurMat.uniforms.uDir.value.set(1, 0);
-  renderer.setRenderTarget(blurRT_A);
-  renderer.render(fsScene, fsCam);
+  /* 3. downsample chain: blur each level, then copy the blurred result into
+     the next (half-resolution) level as its source */
+  for (let i=0; i<bloomLevels.length; i++){
+    blurInPlace(bloomLevels[i]);
+    if (i < bloomLevels.length - 1) {
+      fsQuad.material = copyMat;
+      copyMat.map = bloomLevels[i].a.texture;
+      renderer.setRenderTarget(bloomLevels[i+1].a);
+      renderer.render(fsScene, fsCam);
+    }
+  }
 
-  blurMat.uniforms.tDiffuse.value = blurRT_A.texture;
-  blurMat.uniforms.uDir.value.set(0, 1);
-  renderer.setRenderTarget(blurRT_B);
-  renderer.render(fsScene, fsCam);
+  /* 4. upsample chain: additively combine each level back into the one
+     above it, finishing with the full combined bloom in level 0 */
+  for (let i=bloomLevels.length-2; i>=0; i--){
+    fsQuad.material = addMat;
+    addMat.map = bloomLevels[i+1].a.texture;
+    renderer.autoClear = false;
+    renderer.setRenderTarget(bloomLevels[i].a);
+    renderer.render(fsScene, fsCam);
+    renderer.autoClear = true;
+  }
 
-  blurMat.uniforms.tDiffuse.value = blurRT_B.texture;
-  blurMat.uniforms.uDir.value.set(1, 0);
-  renderer.setRenderTarget(blurRT_A);
-  renderer.render(fsScene, fsCam);
-
-  blurMat.uniforms.tDiffuse.value = blurRT_A.texture;
-  blurMat.uniforms.uDir.value.set(0, 1);
-  renderer.setRenderTarget(blurRT_B);
-  renderer.render(fsScene, fsCam);
-
-  /* 4. present the scene render to the screen, then additive bloom on top —
-     both are cheap fullscreen-quad draws, no second scene render */
+  /* 5. final composite to screen: scene + combined bloom + vignette + grain
+     + chromatic aberration, all in one shader pass */
   renderer.setRenderTarget(null);
-  fsQuad.material = copyMat;
-  copyMat.map = sceneRT.texture;
+  fsQuad.material = finalMat;
+  finalMat.uniforms.tScene.value = sceneRT.texture;
+  finalMat.uniforms.tBloom.value = bloomLevels[0].a.texture;
+  finalMat.uniforms.uTime.value = T || 0;
   renderer.render(fsScene, fsCam);
-
-  fsQuad.material = compositeMat;
-  compositeMat.map = blurRT_B.texture;
-  renderer.autoClear = false;
-  renderer.render(fsScene, fsCam);
-  renderer.autoClear = true;
 }
 
 /* ============================================== 20 · render loop */
@@ -1767,7 +1865,7 @@ function tick(now) {
   /* god-rays gentle sway */
   WORLD.godrays.forEach((r,i) => { r.material.opacity = .28 + Math.sin(T*.4 + i)*.09; });
 
-  renderBloomPass();
+  renderBloomPass(T);
   requestAnimationFrame(tick);
 }
 
