@@ -839,7 +839,7 @@ const FOG_BY_CHAPTER = [0.062, 0.05, 0.044, 0.058, 0.036, 0.03];
 const camera = new THREE.PerspectiveCamera(38, 1, .35, 240);
 scene.add(camera);
 
-const WORLD = { leaves: [], fireflies: [], godrays: [], sanctuary:null, pond:null, water:null };
+const WORLD = { leaves: [], fireflies: [], godrays: [], trees: [], sanctuary:null, pond:null, water:null };
 
 /* ============================================== 5 · sky dome */
 {
@@ -1142,8 +1142,9 @@ buildSanctuary();
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.26,.44,trunkH,9), trunkMat);
     trunk.position.y = trunkH/2; g.add(trunk);
 
-    /* two side branches reaching toward the canopy mass */
-    const branchCount = 2 + (Math.random() < .5 ? 1 : 0);
+    /* two side branches reaching toward the canopy mass — fixed at 2 (not
+       2-3) to hold the per-tree mesh/draw-call budget steady across trees */
+    const branchCount = 2;
     const branchTips = [];
     for (let b=0; b<branchCount; b++){
       const bLen = 2.2 + Math.random()*1.6;
@@ -1159,14 +1160,15 @@ buildSanctuary();
       ));
     }
 
-    /* layered canopy — a full cluster around the crown, plus one at each branch tip */
+    /* layered canopy — a cluster around the crown, plus one at each branch
+       tip. Kept to a small, fixed mesh budget per tree (draw calls, not
+       triangle count, are the real cost of 26 trees x many small meshes) */
     const crown = [ new THREE.Vector3(0, trunkH*.98, 0), ...branchTips ];
     crown.forEach((pos, ci) => {
-      const clumps = ci === 0 ? 5 : 2;
+      const clumps = ci === 0 ? 2 : 1;
       for (let j=0;j<clumps;j++){
         const mat = canopyMats[(i+ci+j) % canopyMats.length];
-        const detail = Math.random() < .4 ? 2 : 1;
-        const foliage = new THREE.Mesh(new THREE.IcosahedronGeometry(1.05+Math.random()*.85, detail), mat);
+        const foliage = new THREE.Mesh(new THREE.IcosahedronGeometry(1.3+Math.random()*.95, 1), mat);
         foliage.position.set(
           pos.x + (Math.random()-.5)*1.5,
           pos.y + (Math.random()-.5)*1.3 + (ci===0?.6:0),
@@ -1175,11 +1177,10 @@ buildSanctuary();
         foliage.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
         g.add(foliage);
       }
-      /* fine twig tufts for closer-range detail */
-      for (let t=0;t<3;t++){
+      if (ci === 0) {
         const tuft = new THREE.Mesh(
-          new THREE.IcosahedronGeometry(.28+Math.random()*.22, 0),
-          canopyMats[(i+ci+t+1) % canopyMats.length]
+          new THREE.IcosahedronGeometry(.32+Math.random()*.22, 0),
+          canopyMats[(i+ci+1) % canopyMats.length]
         );
         tuft.position.set(pos.x+(Math.random()-.5)*2.4, pos.y+(Math.random()-.5)*1.8, pos.z+(Math.random()-.5)*2.4);
         g.add(tuft);
@@ -1191,7 +1192,9 @@ buildSanctuary();
     g.rotation.y = Math.random()*Math.PI;
     const s = .85 + Math.random()*.4;
     g.scale.setScalar(s);
-    scene.add(g);
+    g.userData.windSeed = Math.random()*10;
+    g.userData.windSpeed = .35 + Math.random()*.25;
+    scene.add(g); WORLD.trees.push(g);
   }
 }
 
@@ -1270,13 +1273,18 @@ buildSanctuary();
 }
 
 /* ============================================== 14 · camera path */
+/* each chapter is a deliberately different shot — approach, a low grounded
+   pass through the grove, a dramatic upward frame on the ruins, an intimate
+   push toward the relic, then a wide pull-back reveal (per kage-anatomy.md:
+   camera motion must expose new spatial relationships, not six dolly-ins
+   aimed at the same center) */
 const CAM = [
-  { p:[ 0.0, 3.2, 14.5], t:[ 0.0, 3.4,  -8.0], fov: 38 }, /* 0 threshold */
-  { p:[-2.2, 2.4,  6.5], t:[-1.0, 2.4, -12.0], fov: 44 }, /* 1 grove       */
-  { p:[ 2.4, 1.9,  0.0], t:[-1.0, 2.2, -14.0], fov: 42 }, /* 2 ruins       */
-  { p:[-3.5, 2.6, -6.0], t:[ 0.0, 2.6, -20.0], fov: 40 }, /* 3 sanctuary   */
-  { p:[ 0.0, 6.4, -12.0], t:[ 0.0, 5.5, -26.0], fov: 44 },/* 4 afterlight  */
-  { p:[ 0.0, 10.0,-16.0], t:[ 0.0, 3.0, -30.0], fov: 46 } /* 5 footer      */
+  { p:[ 0.0, 3.2, 14.5], t:[ 0.0, 3.4,  -8.0], fov: 38 }, /* 0 threshold — wide establishing approach */
+  { p:[-4.5, 1.7,  7.5], t:[-9.0, 3.0,  -2.0], fov: 46 }, /* 1 grove — low, grounded, looking off into the trees */
+  { p:[ 3.0, 1.6, -2.0], t:[-1.5, 3.2, -17.0], fov: 40 }, /* 2 ruins — closer, angled up at the columns */
+  { p:[-1.5, 2.2,-11.0], t:[ 0.0, 2.1, -19.5], fov: 36 }, /* 3 sanctuary — intimate push toward the relic */
+  { p:[ 0.0, 9.0, -6.0], t:[ 0.0, 4.5, -28.0], fov: 48 }, /* 4 afterlight — high wide pull-back reveal */
+  { p:[ 0.0,12.0,-18.0], t:[ 0.0, 3.0, -32.0], fov: 46 }  /* 5 footer — final colophon overview */
 ];
 const RIG = { prog:0, smooth:0, mx:0, my:0, tmx:0, tmy:0, intro:0 };
 let curveP, curveT;
@@ -1451,9 +1459,13 @@ const cursor = document.querySelector('.cursor');
 const finePointer = matchMedia('(hover:hover) and (pointer:fine)').matches;
 if (finePointer) cursor.classList.add('on');
 addEventListener('pointermove', (e) => {
-  RIG.tmx = (e.clientX / vpW()) * 2 - 1;
-  RIG.tmy = (e.clientY / vpH()) * 2 - 1;
-  if (finePointer) { cursor.style.transform = `translate3d(${e.clientX}px,${e.clientY}px,0) translate3d(-50%,-50%,0)`; }
+  /* camera parallax only for precise pointers — a touch-scroll drag should
+     never nudge the 3D rig, per the scroll-owns-macro-movement rule */
+  if (finePointer) {
+    RIG.tmx = (e.clientX / vpW()) * 2 - 1;
+    RIG.tmy = (e.clientY / vpH()) * 2 - 1;
+    cursor.style.transform = `translate3d(${e.clientX}px,${e.clientY}px,0) translate3d(-50%,-50%,0)`;
+  }
 });
 document.querySelectorAll('a, button, .chip, .proj').forEach(el => {
   el.addEventListener('pointerenter', () => cursor.classList.add('hov'));
@@ -1477,7 +1489,8 @@ function makeRT(w, h, depthBuffer) {
     format: THREE.RGBAFormat, depthBuffer: !!depthBuffer, stencilBuffer: false,
   });
 }
-let bloomSrcRT, brightRT, blurRT_A, blurRT_B;
+let sceneRT, brightRT, blurRT_A, blurRT_B;
+let sceneRTW = 1, sceneRTH = 1;
 
 const brightMat = new THREE.ShaderMaterial({
   uniforms: { tDiffuse: { value: null }, uThreshold: { value: .66 } },
@@ -1512,18 +1525,28 @@ const blurMat = new THREE.ShaderMaterial({
     }
   `,
 });
+const copyMat = new THREE.MeshBasicMaterial({ map: null, depthTest: false, depthWrite: false });
 const compositeMat = new THREE.MeshBasicMaterial({
   map: null, transparent: true, blending: THREE.AdditiveBlending,
   depthTest: false, depthWrite: false,
 });
 
 function setupBloomTargets() {
+  /* full-res scene target must track the renderer's actual drawing-buffer
+     size (CSS size * capped devicePixelRatio), not CSS pixels */
+  const sw = Math.max(2, renderer.domElement.width);
+  const sh = Math.max(2, renderer.domElement.height);
+  if (sw !== sceneRTW || sh !== sceneRTH) {
+    sceneRTW = sw; sceneRTH = sh;
+    if (sceneRT) sceneRT.dispose();
+    sceneRT = makeRT(sw, sh, true);
+  }
+
   const w = Math.max(2, Math.round(vpW() * bloomScale));
   const h = Math.max(2, Math.round(vpH() * bloomScale));
   if (w === bloomW && h === bloomH) return;
   bloomW = w; bloomH = h;
-  [bloomSrcRT, brightRT, blurRT_A, blurRT_B].forEach(rt => rt && rt.dispose());
-  bloomSrcRT = makeRT(w, h, true);
+  [brightRT, blurRT_A, blurRT_B].forEach(rt => rt && rt.dispose());
   brightRT   = makeRT(w, h, false);
   blurRT_A   = makeRT(w, h, false);
   blurRT_B   = makeRT(w, h, false);
@@ -1531,13 +1554,13 @@ function setupBloomTargets() {
 }
 
 function renderBloomPass() {
-  /* 1. low-res copy of the live scene, used only as the bloom source */
-  renderer.setRenderTarget(bloomSrcRT);
+  /* 1. render the live scene exactly once, into an offscreen full-res target */
+  renderer.setRenderTarget(sceneRT);
   renderer.render(scene, camera);
 
-  /* 2. bright-pass */
+  /* 2. bright-pass (reads the single scene render, writes low-res) */
   fsQuad.material = brightMat;
-  brightMat.uniforms.tDiffuse.value = bloomSrcRT.texture;
+  brightMat.uniforms.tDiffuse.value = sceneRT.texture;
   renderer.setRenderTarget(brightRT);
   renderer.render(fsScene, fsCam);
 
@@ -1563,9 +1586,13 @@ function renderBloomPass() {
   renderer.setRenderTarget(blurRT_B);
   renderer.render(fsScene, fsCam);
 
-  /* 4. full-res render to screen, then an additive composite of the bloom */
+  /* 4. present the scene render to the screen, then additive bloom on top —
+     both are cheap fullscreen-quad draws, no second scene render */
   renderer.setRenderTarget(null);
-  renderer.render(scene, camera);
+  fsQuad.material = copyMat;
+  copyMat.map = sceneRT.texture;
+  renderer.render(fsScene, fsCam);
+
   fsQuad.material = compositeMat;
   compositeMat.map = blurRT_B.texture;
   renderer.autoClear = false;
@@ -1620,6 +1647,12 @@ function tick(now) {
       if (p[i*3+1] < .3) { p[i*3+1] = 14 + Math.random()*3; p[i*3] = (Math.random()-.5)*40; p[i*3+2] = -20+(Math.random()-.5)*36; }
     }
     l.pts.geometry.attributes.position.needsUpdate = true;
+  }
+  /* canopy wind sway — a slow, restrained rock per tree, never enough to
+     read as animation rather than atmosphere */
+  for (let i=0;i<WORLD.trees.length;i++){
+    const t = WORLD.trees[i];
+    t.rotation.z = Math.sin(T*t.userData.windSpeed + t.userData.windSeed) * .014;
   }
   /* relic pulse */
   if (WORLD.relic) {
