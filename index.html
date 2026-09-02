@@ -651,28 +651,29 @@ function texStone() {
   return c;
 }
 
-/* canopy sky texture — soft daylight through leaves */
+/* canopy sky texture — low-key daylight-through-canopy, near-black at the
+   horizon so it blends into the fog color instead of reading as a bright dome */
 function texSky() {
   const c = makeCanvas(1024), g = c.getContext('2d');
   const grad = g.createLinearGradient(0,0,0,1024);
-  grad.addColorStop(0,'#4b6a3e');
-  grad.addColorStop(.45,'#3e5a34');
-  grad.addColorStop(.75,'#284120');
-  grad.addColorStop(1,'#12200f');
+  grad.addColorStop(0,'#1c2e18');
+  grad.addColorStop(.4,'#162318');
+  grad.addColorStop(.75,'#0e1811');
+  grad.addColorStop(1,'#070d09');
   g.fillStyle = grad; g.fillRect(0,0,1024,1024);
-  /* golden sun patches */
-  for (let i=0;i<8;i++){
-    const x = srand()*1024, y = 80 + srand()*280;
-    const r = 90 + srand()*180;
+  /* concentrated warm sunbeam glow — the scene's one bright note, like Kage's moon */
+  for (let i=0;i<5;i++){
+    const x = 380 + srand()*260, y = 60 + srand()*200;
+    const r = 100 + srand()*170;
     const grad2 = g.createRadialGradient(x,y,0,x,y,r);
-    grad2.addColorStop(0,'rgba(250,220,140,.55)');
-    grad2.addColorStop(1,'rgba(250,220,140,0)');
+    grad2.addColorStop(0,'rgba(255,214,132,.5)');
+    grad2.addColorStop(1,'rgba(255,214,132,0)');
     g.fillStyle = grad2; g.beginPath(); g.arc(x,y,r,0,6.28); g.fill();
   }
-  /* leaf silhouettes */
+  /* leaf silhouettes — darker, so the canopy reads as near-black mass */
   for (let i=0;i<1400;i++){
     const y = srand()*1024;
-    g.fillStyle = `rgba(${10+srand()*20|0},${20+srand()*30|0},${8+srand()*15|0},${.25+srand()*.35})`;
+    g.fillStyle = `rgba(${4+srand()*10|0},${9+srand()*16|0},${3+srand()*8|0},${.3+srand()*.4})`;
     g.beginPath(); g.ellipse(srand()*1024, y, 3+srand()*10, 1.5+srand()*6, srand()*6.28, 0, 6.28); g.fill();
   }
   return c;
@@ -755,10 +756,13 @@ const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
 renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.setClearColor(C.ink, 1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.setClearColor(0x070d09, 1);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x1e3020, 0.028);
+scene.fog = new THREE.FogExp2(0x0c1710, 0.062);
+const FOG_BY_CHAPTER = [0.062, 0.05, 0.044, 0.058, 0.036, 0.03];
 
 const camera = new THREE.PerspectiveCamera(38, 1, .35, 240);
 scene.add(camera);
@@ -782,7 +786,7 @@ const WORLD = { leaves: [], fireflies: [], godrays: [], sanctuary:null, pond:nul
   mossTex.repeat.set(10,10);
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(180, 180, 32, 32),
-    new THREE.MeshStandardMaterial({ map: mossTex, roughness:.94, metalness:0, color:0xa8b590 })
+    new THREE.MeshStandardMaterial({ map: mossTex, roughness:.94, metalness:0, color:0x394b2c })
   );
   ground.rotation.x = -Math.PI/2;
   /* gently undulate the terrain */
@@ -801,8 +805,8 @@ function buildSanctuary() {
   const g = new THREE.Group();
   const stoneTex = toTex(texStone(), { wrap:true, aniso:8 });
   stoneTex.repeat.set(1,3);
-  const stoneMat = new THREE.MeshStandardMaterial({ map: stoneTex, roughness:.88, metalness:.04, color:0x8a8874 });
-  const stoneMatDark = new THREE.MeshStandardMaterial({ map: stoneTex.clone(), roughness:.94, metalness:.02, color:0x565344 });
+  const stoneMat = new THREE.MeshStandardMaterial({ map: stoneTex, roughness:.88, metalness:.04, color:0x5e5c4c });
+  const stoneMatDark = new THREE.MeshStandardMaterial({ map: stoneTex.clone(), roughness:.94, metalness:.02, color:0x38362a });
   stoneMatDark.map.wrapS = stoneMatDark.map.wrapT = THREE.RepeatWrapping;
   stoneMatDark.map.repeat.set(1,2);
 
@@ -1141,13 +1145,15 @@ buildSanctuary();
   scene.add(pts); WORLD.leaves = { pts, pos, seed, N };
 }
 
-/* ============================================== 13 · lights */
+/* ============================================== 13 · lights — one warm rim key from
+   behind the sanctuary (the sunbeam), a cold low ambient fill, and a jade practical */
 {
-  scene.add(new THREE.HemisphereLight(0xa8c890, 0x1a2214, .55));
-  const sun = new THREE.DirectionalLight(C.sun, 1.15);
-  sun.position.set(-8, 22, -6);
-  scene.add(sun); WORLD.sun = sun;
-  const fill = new THREE.PointLight(C.jade, .6, 26, 1.8);
+  scene.add(new THREE.HemisphereLight(0x3a5a44, 0x0a120b, .16));
+  const sun = new THREE.DirectionalLight(0xffd68a, 1.85);
+  sun.position.set(4, 19, -42);
+  sun.target.position.set(0, 3, -14);
+  scene.add(sun); scene.add(sun.target); WORLD.sun = sun;
+  const fill = new THREE.PointLight(C.jade, .85, 24, 1.9);
   fill.position.set(0, 3.5, -19);
   scene.add(fill); WORLD.jadeFill = fill;
 }
@@ -1325,6 +1331,15 @@ function tick(now) {
   RIG.my = damp(RIG.my, RIG.tmy, 3.6, dt);
   updateActive(RIG.prog);
   applyCamera();
+
+  /* fog density breathes with the chapter — denser at the threshold and the
+     sanctuary interior, thinner where the composition needs to open up */
+  {
+    const N = FOG_BY_CHAPTER.length - 1;
+    const s = clamp(RIG.smooth, 0, N);
+    const i = clamp(Math.floor(s), 0, N - 1), f = s - i;
+    scene.fog.density = lerp(FOG_BY_CHAPTER[i], FOG_BY_CHAPTER[i + 1], f);
+  }
 
   /* animate fireflies */
   if (WORLD.fireflies) {
