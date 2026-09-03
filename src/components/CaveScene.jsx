@@ -19,6 +19,8 @@ import rockVine4 from '../assets/patches/rock_vine_4.png'
 import stone1 from '../assets/patches/stone_1.png'
 import stone2 from '../assets/patches/stone_2.png'
 import stone3 from '../assets/patches/stone_3.png'
+import waterfallBase from '../assets/chapters/waterfall_base.png'
+import waterEdgeRocks from '../assets/chapters/water_edge_rocks.png'
 
 // Native canvas the layers were segmented from (px).
 const CANVAS_W = 1915
@@ -60,6 +62,22 @@ function patchFrame(imgW, imgH, scale, x, y) {
   return { x, y, w: (imgW * scale) / CANVAS_W, h: (imgH * scale) / CANVAS_H }
 }
 
+// Chapter backdrops (waterfall_base, water_edge_rocks) are entirely new
+// photo compositions, not slices of the main cave photo -- they have no
+// natural position in CANVAS_W/CANVAS_H space at all. Each one is placed
+// as its own self-contained "island": centered on a world x far enough
+// from the main cluster (and from each other) that their view frustums
+// never overlap at any camera position shots.js uses, sized to fill the
+// frame the way REF_W does for the main layers. The empty space the
+// camera crosses between islands reads as the passage darkening between
+// chambers -- deliberate, not a gap to hide (see shots.js).
+function standaloneRect(imgW, imgH, depth, cx, cy) {
+  const scale = (BASE_DIST - depth) / BASE_DIST
+  const w = REF_W * scale
+  const h = w * (imgH / imgW)
+  return { x: cx, y: cy, w, h }
+}
+
 const LAYERS = [
   { tex: sourcePhoto, depth: -5.3, frame: { x: 0, y: 0, w: 1, h: 1 } },
   { tex: structureWallsVines, depth: -4.6, frame: { x: 0, y: 0, w: 1, h: 1 } },
@@ -79,6 +97,9 @@ const LAYERS = [
   { tex: stone1, depth: -1.4, frame: patchFrame(568, 231, 0.6, 0.0, 0.90) },
   { tex: stone2, depth: -1.4, frame: patchFrame(921, 225, 0.6, 0.34, 0.90) },
   { tex: stone3, depth: -1.4, frame: patchFrame(691, 236, 0.6, 0.78, 0.90) },
+  // chapter backdrops -- see standaloneRect and shots.js CHAPTER2/3_X
+  { tex: waterfallBase, depth: -3, rect: standaloneRect(1915, 821, -3, 32, 0) },
+  { tex: waterEdgeRocks, depth: -3, rect: standaloneRect(1839, 855, -3, 64, -0.3) },
 ]
 
 function clamp(v, lo, hi) {
@@ -117,10 +138,12 @@ function frameToWorld(frame, depth) {
   return { x, y, w, h }
 }
 
-function Layer({ tex, depth, frame }) {
+function Layer({ tex, depth, frame, rect }) {
   const texture = useLoader(TextureLoader, tex)
   texture.colorSpace = SRGBColorSpace
-  const { x, y, w, h } = useMemo(() => frameToWorld(frame, depth), [frame, depth])
+  // `rect` (standaloneRect) is already fully computed in world units;
+  // `frame` (patchFrame/CANVAS-fraction based) still needs frameToWorld.
+  const { x, y, w, h } = useMemo(() => (rect ? rect : frameToWorld(frame, depth)), [rect, frame, depth])
 
   return (
     <mesh position={[x, y, depth]}>
