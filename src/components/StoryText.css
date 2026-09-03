@@ -1,0 +1,34 @@
+.story-text {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 6vw 10vh;
+}
+
+.story-text__block {
+  position: absolute;
+  max-width: 620px;
+  text-align: center;
+  color: #f4f1ea;
+  transition: opacity 0.2s linear;
+}
+
+.story-text__block h1 {
+  margin: 0 0 0.5rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.8);
+}
+
+.story-text__block p {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  opacity: 0.85;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8);
+}
