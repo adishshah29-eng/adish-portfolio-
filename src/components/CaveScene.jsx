@@ -3,6 +3,7 @@ import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader, SRGBColorSpace, Vector3 } from 'three'
 
 import { SHOTS } from '../scene/shots'
+import AdishName from './AdishName'
 import sourcePhoto from '../assets/layers/source_photo.png'
 import structureWallsVines from '../assets/layers/structure_walls_vines.png'
 import backgroundLightshaft from '../assets/layers/background_lightshaft.png'
@@ -190,6 +191,7 @@ export default function CaveScene({ progress }) {
       {LAYERS.map((layer, i) => (
         <Layer key={i} {...layer} />
       ))}
+      <AdishName progress={progress} />
     </Canvas>
   )
 }
