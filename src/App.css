@@ -1,21 +1,16 @@
-.scene {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
+.scene-scroll {
+  height: 200vh;
 }
 
-.scene-layer {
-  position: absolute;
+.scene-sticky {
+  position: sticky;
   top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
+  height: 100vh;
 }
 
-.scene-layer--crop {
-  width: auto;
-  height: auto;
+.scene-sticky canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
