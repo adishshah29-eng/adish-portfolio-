@@ -1,9 +1,28 @@
 // The scroll-driven camera path for the cave scene. Each shot is an
 // authored camera position + look-at target in world units, plus the text
 // that reads while that shot is on screen. Order here is playback order --
-// scroll maps linearly onto this list, shot i sitting at progress i/(N-1),
-// with a smoothstep-eased pan between consecutive shots in between.
+// scroll maps linearly onto this list, shot i sitting at progress i/(N-1).
 //
+// This is a portfolio, not a demo reel -- a reader has to actually be able
+// to read each line before the camera moves on, and a fast scroll (a
+// single mobile swipe especially) must not be able to blow straight past
+// a shot without ever landing on it. So the mapping isn't a continuous
+// pan across the whole gap between shots: each shot gets a DWELL zone
+// (camera fully holds at its exact position, text fully visible -- real
+// reading time, guaranteed by scroll distance rather than scroll speed)
+// bracketing a shorter TRANSITION zone where the camera actually moves.
+// See getShotState in CaveScene.jsx and the matching window in
+// StoryText.jsx (both read this same constant so camera holds and text
+// visibility line up exactly).
+//
+// Fraction of each inter-shot segment held at the FROM shot before the
+// transition starts (and, symmetrically, at the TO shot after it ends).
+// Interior shots get this held on both sides (from the tail of the
+// incoming segment and the head of the outgoing one), so they read for
+// roughly 2x this fraction of a segment; the two end shots (nothing
+// before shot 0, nothing after the last one) only get it once, at the
+// scroll extremes where the page can't scroll further anyway.
+export const DWELL_FRACTION = 0.38
 // These are flat photo planes, not a wraparound panorama -- there is no
 // real content past the edge of the source photo. A wide swing of the
 // look-at target (rotating the camera far off-axis) points the frustum

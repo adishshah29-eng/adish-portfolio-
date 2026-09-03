@@ -2,7 +2,7 @@ import { useRef, useMemo, useEffect } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader, SRGBColorSpace, Vector3 } from 'three'
 
-import { SHOTS } from '../scene/shots'
+import { SHOTS, DWELL_FRACTION } from '../scene/shots'
 import AdishName from './AdishName'
 import sourcePhoto from '../assets/layers/source_photo.png'
 import structureWallsVines from '../assets/layers/structure_walls_vines.png'
@@ -129,11 +129,21 @@ function lerp3(a, b, t) {
 
 // Continuous camera state for a given story progress (0..1): shot i sits
 // at progress i/(N-1), eased-interpolated between consecutive shots.
+// Remaps local segment progress (0..1) so the camera holds flat at 0 for
+// the first DWELL_FRACTION, flat at 1 for the last DWELL_FRACTION, and
+// only actually moves through the middle window -- see the DWELL_FRACTION
+// comment in shots.js for why.
+function dwellRemap(localT) {
+  const span = 1 - 2 * DWELL_FRACTION
+  if (span <= 0) return localT // degenerate case, just in case DWELL_FRACTION >= 0.5
+  return clamp((localT - DWELL_FRACTION) / span, 0, 1)
+}
+
 function getShotState(progress) {
   const n = SHOTS.length
   const idx = progress * (n - 1)
   const i0 = clamp(Math.floor(idx), 0, n - 2)
-  const eased = smoothstep(idx - i0)
+  const eased = smoothstep(dwellRemap(idx - i0))
   const a = SHOTS[i0]
   const b = SHOTS[i0 + 1]
   return { position: lerp3(a.position, b.position, eased), target: lerp3(a.target, b.target, eased) }

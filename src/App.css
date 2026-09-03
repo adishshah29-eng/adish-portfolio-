@@ -1,5 +1,9 @@
 .scene-scroll {
-  height: 700vh;
+  /* 7 shots / 6 segments, each with a dwell-hold on both sides (see
+     DWELL_FRACTION in shots.js) -- this needs to be real scroll distance,
+     not just a proportional split, or "hold at each shot to give people
+     time to read" is meaningless on a short page. */
+  height: 1100vh;
 }
 
 .scene-sticky {
