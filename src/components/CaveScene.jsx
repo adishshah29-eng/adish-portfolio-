@@ -11,6 +11,13 @@ import waterfallCenter from '../assets/layers/waterfall_center.png'
 import foregroundRocks from '../assets/layers/foreground_rocks.png'
 import foregroundLOrchids from '../assets/layers/foreground_L_orchids.png'
 import foregroundROrchids from '../assets/layers/foreground_R_orchids.png'
+import rockVine1 from '../assets/patches/rock_vine_1.png'
+import rockVine2 from '../assets/patches/rock_vine_2.png'
+import rockVine3 from '../assets/patches/rock_vine_3.png'
+import rockVine4 from '../assets/patches/rock_vine_4.png'
+import stone1 from '../assets/patches/stone_1.png'
+import stone2 from '../assets/patches/stone_2.png'
+import stone3 from '../assets/patches/stone_3.png'
 
 // Native canvas the layers were segmented from (px).
 const CANVAS_W = 1915
@@ -20,12 +27,37 @@ const CANVAS_H = 821
 const REF_W = 10
 const REF_H = REF_W * (CANVAS_H / CANVAS_W)
 
-// The story camera (see shots.js) swings much further from center than the
-// old idle-parallax rig did, to actually reframe on different parts of the
-// cave. Layer depths are spaced out further than before so every full-frame
-// layer's built-in overhang (see the `scale` formula in frameToWorld) gives
-// enough cushion for that travel without exposing a plane's raw edge.
-const BASE_DIST = 8
+// Every full-frame layer's world size is computed as if the camera always
+// sits exactly BASE_DIST away (see the `scale` formula below) -- that's
+// what keeps the composition matching the flat photo when the camera is
+// centered. But shots.js dollies the camera anywhere from z=6.1 to z=9.2,
+// and a plane sized for BASE_DIST=8 is genuinely too small once the camera
+// is actually further away than that (at z=9.2 the frustum's footprint at
+// a layer's depth is bigger than what an 8-away sizing gives it, exposing
+// its edge as black -- this bit twice: first read as "natural photo
+// darkness" like the real dark top edge, but pixel-checked at true black,
+// not the source photo's actual ~25-35 brightness there).
+//
+// Fix: size every layer as if the camera sits much closer than it ever
+// really does (well under the nearest shot's z, not just the farthest) --
+// scale grows as this shrinks, so every layer ends up with generous
+// built-in overhang at every real camera distance shots.js uses. The
+// tradeoff (the composition would only match the flat photo exactly at
+// this hypothetical close distance) doesn't cost anything: no shot camera
+// actually sits there.
+const BASE_DIST = 4.5
+
+// Patch layers (rock_vine_*, stone_*) are separately-generated, separately
+// -segmented cutouts, not slices of the main photo -- they don't have a
+// natural position in CANVAS_W/CANVAS_H space, so they're placed by native
+// pixel size (so they don't get stretched) times a hand-picked scale, at
+// a hand-picked top-left corner. Purpose: cover the black void that's
+// exposed past the original photo's edge when the story camera tilts up
+// toward the light shaft (top) or looks down toward the pool (bottom) --
+// see shots.js and the "these are flat planes, not a panorama" note there.
+function patchFrame(imgW, imgH, scale, x, y) {
+  return { x, y, w: (imgW * scale) / CANVAS_W, h: (imgH * scale) / CANVAS_H }
+}
 
 const LAYERS = [
   { tex: sourcePhoto, depth: -5.3, frame: { x: 0, y: 0, w: 1, h: 1 } },
@@ -36,6 +68,16 @@ const LAYERS = [
   { tex: foregroundRocks, depth: -1.6, frame: { x: 0, y: 0, w: 1, h: 1 } },
   { tex: foregroundLOrchids, depth: 0.3, frame: { x: 0 / CANVAS_W, y: 242 / CANVAS_H, w: 219 / CANVAS_W, h: 264 / CANVAS_H } },
   { tex: foregroundROrchids, depth: 0.3, frame: { x: 1519 / CANVAS_W, y: 60 / CANVAS_H, w: 396 / CANVAS_W, h: 341 / CANVAS_H } },
+  // top edge: rock+vine ceiling patches, sitting just in front of the
+  // structure layer so they read as more ceiling detail, not a separate object
+  { tex: rockVine1, depth: -4.5, frame: patchFrame(615, 571, 0.5, -0.05, -0.20) },
+  { tex: rockVine2, depth: -4.5, frame: patchFrame(493, 570, 0.5, 0.29, -0.20) },
+  { tex: rockVine3, depth: -4.5, frame: patchFrame(394, 559, 0.5, 0.59, -0.20) },
+  { tex: rockVine4, depth: -4.5, frame: patchFrame(315, 506, 0.5, 0.87, -0.20) },
+  // bottom edge: mossy stones, foreground depth near the existing rocks layer
+  { tex: stone1, depth: -1.4, frame: patchFrame(568, 231, 0.6, 0.0, 0.90) },
+  { tex: stone2, depth: -1.4, frame: patchFrame(921, 225, 0.6, 0.34, 0.90) },
+  { tex: stone3, depth: -1.4, frame: patchFrame(691, 236, 0.6, 0.78, 0.90) },
 ]
 
 function clamp(v, lo, hi) {
