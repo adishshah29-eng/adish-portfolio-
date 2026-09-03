@@ -19,8 +19,11 @@ import rockVine4 from '../assets/patches/rock_vine_4.png'
 import stone1 from '../assets/patches/stone_1.png'
 import stone2 from '../assets/patches/stone_2.png'
 import stone3 from '../assets/patches/stone_3.png'
-import waterfallBase from '../assets/chapters/waterfall_base.png'
-import waterEdgeRocks from '../assets/chapters/water_edge_rocks.png'
+import wfWaterPool from '../assets/chapters/wf_water_pool.png'
+import wfRockAndFalls from '../assets/chapters/wf_rock_and_falls.png'
+import wfBackgroundWalls from '../assets/chapters/wf_background_walls.png'
+import weWaterReflection from '../assets/chapters/we_water_reflection.png'
+import weRockRidge from '../assets/chapters/we_rock_ridge.png'
 
 // Native canvas the layers were segmented from (px).
 const CANVAS_W = 1915
@@ -78,6 +81,10 @@ function standaloneRect(imgW, imgH, depth, cx, cy) {
   return { x: cx, y: cy, w, h }
 }
 
+// Each island center -- also referenced by shots.js for camera position/target.
+const CHAPTER2_X = 32
+const CHAPTER3_X = 64
+
 const LAYERS = [
   { tex: sourcePhoto, depth: -5.3, frame: { x: 0, y: 0, w: 1, h: 1 } },
   { tex: structureWallsVines, depth: -4.6, frame: { x: 0, y: 0, w: 1, h: 1 } },
@@ -97,9 +104,14 @@ const LAYERS = [
   { tex: stone1, depth: -1.4, frame: patchFrame(568, 231, 0.6, 0.0, 0.90) },
   { tex: stone2, depth: -1.4, frame: patchFrame(921, 225, 0.6, 0.34, 0.90) },
   { tex: stone3, depth: -1.4, frame: patchFrame(691, 236, 0.6, 0.78, 0.90) },
-  // chapter backdrops -- see standaloneRect and shots.js CHAPTER2/3_X
-  { tex: waterfallBase, depth: -3, rect: standaloneRect(1915, 821, -3, 32, 0) },
-  { tex: waterEdgeRocks, depth: -3, rect: standaloneRect(1839, 855, -3, 64, -0.3) },
+  // chapter 2 island (waterfall_base source, split into 3 depth layers the
+  // same way the main cave photo was -- see segment_waterfall.py)
+  { tex: wfBackgroundWalls, depth: -5, rect: standaloneRect(1915, 821, -5, CHAPTER2_X, 0) },
+  { tex: wfRockAndFalls, depth: -3, rect: standaloneRect(1915, 821, -3, CHAPTER2_X, 0) },
+  { tex: wfWaterPool, depth: -1.3, rect: standaloneRect(1915, 821, -1.3, CHAPTER2_X, 0) },
+  // chapter 3 island (water_edge_rocks source, split into 2 depth layers)
+  { tex: weRockRidge, depth: -3.5, rect: standaloneRect(1839, 855, -3.5, CHAPTER3_X, -0.3) },
+  { tex: weWaterReflection, depth: -1.8, rect: standaloneRect(1839, 855, -1.8, CHAPTER3_X, -0.3) },
 ]
 
 function clamp(v, lo, hi) {
