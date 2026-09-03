@@ -170,6 +170,50 @@ function Layer({ tex, depth, frame, rect }) {
 const JITTER_X = 0.12
 const JITTER_Y = 0.08
 
+// Every world-space size and position in this scene (shots.js camera
+// targets, AdishName's placement, layer/patch sizing) was authored and
+// verified against a wide desktop aspect (~1.78) with a fixed 30deg
+// vertical FOV. On a narrow phone aspect (~0.5), a fixed vertical FOV
+// means the *horizontal* FOV -- derived from vfov and aspect -- shrinks
+// drastically, so the camera is effectively zoomed into a narrow vertical
+// sliver of the composition: authored horizontal pans between shots barely
+// register, and world-space text (AdishName) that was sized to look right
+// across a wide frame instead fills most of a narrow one.
+//
+// Fix: widen the vertical FOV as aspect narrows, holding the *horizontal*
+// extent closer to what it is at the reference aspect, so narrow viewports
+// still see a comparable width of the composition instead of a zoomed-in
+// strip. Clamped so landscape/desktop keeps the originally-tuned 30deg
+// exactly, and so very narrow phones don't reach fisheye-level distortion.
+const REFERENCE_ASPECT = 1600 / 900
+const REFERENCE_VFOV_RAD = (30 * Math.PI) / 180
+const REFERENCE_HALF_WIDTH = Math.tan(REFERENCE_VFOV_RAD / 2) * REFERENCE_ASPECT
+const MIN_VFOV_DEG = 30
+// Kept moderate rather than fully compensating for extreme phone aspects:
+// every layer's built-in overhang (BASE_DIST) was sized against the
+// original fixed 30deg vfov, so widening the frustum too far re-exposes
+// the black-edge problem that was already fixed once for the pan/dolly
+// case. This trades some mobile framing width for keeping that fixed.
+const MAX_VFOV_DEG = 42
+
+function responsiveFov(aspect) {
+  const desired = (2 * Math.atan(REFERENCE_HALF_WIDTH / aspect) * 180) / Math.PI
+  return clamp(desired, MIN_VFOV_DEG, MAX_VFOV_DEG)
+}
+
+function ResponsiveCameraFov() {
+  const { camera, size } = useThree()
+  useEffect(() => {
+    const aspect = size.width / size.height
+    const fov = responsiveFov(aspect)
+    if (Math.abs(camera.fov - fov) > 0.01) {
+      camera.fov = fov
+      camera.updateProjectionMatrix()
+    }
+  }, [camera, size])
+  return null
+}
+
 function CameraRig({ progress }) {
   const { camera } = useThree()
   const progressRef = useRef(progress)
@@ -222,6 +266,7 @@ export default function CaveScene({ progress }) {
       camera={{ position: SHOTS[0].position, fov: 30, near: 0.1, far: 100 }}
       gl={{ antialias: true }}
     >
+      <ResponsiveCameraFov />
       <CameraRig progress={progress} />
       {LAYERS.map((layer, i) => (
         <Layer key={i} {...layer} />
