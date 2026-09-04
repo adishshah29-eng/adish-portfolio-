@@ -132,21 +132,30 @@
   color: #b8b2a3;
 }
 
+/* Plain text, dot-separated, rather than bordered pill badges -- rounded
+   accent-colored chips are the default output of every component library
+   and AI scaffold, and read as such no matter what they contain. A short
+   list of dot-separated words sits closer to how a masthead or credit
+   line actually sets tags in print. */
 .work-card__tags {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
   flex-wrap: wrap;
-}
-
-.work-card__tags span {
   font-family: system-ui, sans-serif;
   font-size: 0.75rem;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #c9a86a;
-  border: 1px solid rgba(201, 168, 106, 0.35);
-  border-radius: 999px;
-  padding: 0.2rem 0.65rem;
+  color: #8f8a7c;
+}
+
+.work-card__tags span::after {
+  content: '\00b7';
+  margin-left: 0.55rem;
+  color: rgba(201, 168, 106, 0.5);
+}
+
+.work-card__tags span:last-child::after {
+  content: none;
 }
 
 @media (max-width: 860px) {

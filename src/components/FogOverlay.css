@@ -7,6 +7,11 @@
      the mist's own look and its continuous drift animation. */
 }
 
+.fog-overlay__puffs {
+  position: absolute;
+  inset: 0;
+}
+
 .fog-overlay__puff {
   position: absolute;
   width: 140vmax;
@@ -40,11 +45,12 @@
    any single moment -- this flat layer underneath guarantees the overlay
    reaches genuinely full, edge-to-edge coverage once opacity hits 1,
    rather than a mist that's dense in the middle and faintly sheer at the
-   corners. */
+   corners. Background color is set inline (FogOverlay.jsx) -- it drifts
+   from cream to near-black as the fog completes, see the comment there. */
 .fog-overlay__wash {
   position: absolute;
   inset: 0;
-  background: #e9e0c9;
+  transition: background-color 0.1s linear;
 }
 
 @keyframes fog-drift-a {
