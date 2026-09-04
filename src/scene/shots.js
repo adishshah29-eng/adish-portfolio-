@@ -78,25 +78,47 @@ export const SHOTS = [
     heading: 'Still water',
     body: 'Where the fall settles, and the story rests.',
   },
-  // Chapter 2-3: both shots look at the SAME backdrop "island" (see
-  // standaloneRect/CHAPTER23_X in CaveScene.jsx) far out on the world
-  // x-axis rather than a slice of the main photo -- a new composition,
-  // but ONE new composition shared by both chapters, not two. The wide
-  // gap the camera crosses to reach it is empty space by construction
-  // (nothing is rendered between islands), which reads as the passage
-  // briefly darkening between chambers rather than as a rendering gap, as
-  // long as that crossing stays a single continuous pan. Within the
-  // island itself, chapter 2 is the wide arrival view (the full receding
-  // channel toward the lit archway) and chapter 3 dollies in closer and
-  // lower, toward the foreground rocks and water -- two framings of one
-  // segmented photo, exactly like chapter 1's shots are all one layer
-  // stack, not a new photo per shot.
+  // Chapter 2-3: all five of these shots look at the SAME backdrop
+  // "island" (see standaloneRect/CHAPTER23_X in CaveScene.jsx) far out on
+  // the world x-axis rather than a slice of the main photo -- a new
+  // composition, but ONE new composition shared by both chapters, not
+  // two. The wide gap the camera crosses to reach it is empty space by
+  // construction (nothing is rendered between islands), which reads as
+  // the passage briefly darkening between chambers rather than as a
+  // rendering gap, as long as that crossing stays a single continuous
+  // pan. Within the island itself this mirrors chapter 1's own five-shot
+  // cadence exactly, not just its two bookends: a wide arrival, a pan
+  // left, a push in on the light, a pan right, then dollying in closer
+  // and lower toward the water for a quieter final beat -- the same
+  // "camera moment" chapter 1 has, applied to this photo instead of a
+  // new one per shot.
   {
     id: 'waterfall-close',
     position: [32, 0.1, 6.5],
     target: [32, 0, -3],
     heading: 'Where it falls',
     body: 'Water finds rock, and both are shaped by the meeting.',
+  },
+  {
+    id: 'left-bank',
+    position: [31.6, 0.15, 5.9],
+    target: [30.7, 0.45, -2],
+    heading: 'Holding on',
+    body: 'Each ledge holds another bloom, further than the light reaches.',
+  },
+  {
+    id: 'light-source',
+    position: [32, 0.2, 5.3],
+    target: [32, 0.7, -4],
+    heading: 'The source',
+    body: 'Every ray in this place begins here.',
+  },
+  {
+    id: 'right-bank',
+    position: [32.4, 0.15, 5.9],
+    target: [33.3, 0.45, -2],
+    heading: 'The far bank',
+    body: 'The same procession, mirrored on the other side.',
   },
   {
     id: 'surface-reflections',

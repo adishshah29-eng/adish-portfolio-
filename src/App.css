@@ -1,12 +1,13 @@
 .scene-scroll {
-  /* Camera motion is continuous now (no dwell/hold plateau -- see
-     shots.js), so this no longer needs the inflated scroll distance that
-     was added purely to make each hold a generous real distance rather
-     than scroll-speed-dependent. 800vh = roughly the original pre-dwell
-     shot-sequence budget (700vh) plus the locked-camera name-reveal intro
-     (INTRO_FRACTION in shots.js, 15% of the page) added on top of that,
-     not carved out of it. */
-  height: 800vh;
+  /* Camera motion is continuous (no dwell/hold plateau -- see shots.js),
+     so height just needs to give each shot-to-shot segment a consistent
+     scroll budget as shots are added/removed, not extra distance for a
+     hold. Chapter 2-3 grew from 2 shots to 5 (matching chapter 1's own
+     five-shot cadence) -- 7 shots (6 segments) at 800vh gave each segment
+     ~113vh of the post-intro budget; 10 shots (9 segments) scales that up
+     to 1200vh to keep the same per-shot pace rather than compressing the
+     new shots into a smaller slice of an unchanged page. */
+  height: 1200vh;
 }
 
 .scene-sticky {
