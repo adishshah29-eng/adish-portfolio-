@@ -24,22 +24,15 @@ function LinkedInIcon() {
   )
 }
 
-function XIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
-    </svg>
-  )
-}
-
-// Placeholder email + social hrefs -- swap in the real ones. Kept as a
-// small data array (not hardcoded markup per link) so adding/removing a
-// platform later is a one-line change, not a layout edit.
-const EMAIL = 'hello@example.com'
+// Real contact details, from the resume. No X/Twitter entry -- there's
+// no handle to point it at, and a social icon linking to a generic,
+// account-less x.com is worse than not having the icon at all. Kept as
+// a small data array (not hardcoded markup per link) so adding a
+// platform later, once there's a real one to add, is a one-line change.
+const EMAIL = 'adishshah29@gmail.com'
 const SOCIALS = [
-  { label: 'GitHub', Icon: GitHubIcon, href: 'https://github.com/' },
-  { label: 'LinkedIn', Icon: LinkedInIcon, href: 'https://linkedin.com/' },
-  { label: 'X', Icon: XIcon, href: 'https://x.com/' },
+  { label: 'GitHub', Icon: GitHubIcon, href: 'https://github.com/adishshah29-eng' },
+  { label: 'LinkedIn', Icon: LinkedInIcon, href: 'https://linkedin.com/in/adishshah29' },
 ]
 
 export default function ContactFooter() {

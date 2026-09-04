@@ -1,35 +1,45 @@
 import useRevealOnScroll from '../hooks/useRevealOnScroll'
 import './SelectedWork.css'
 
-// Placeholder projects -- structure is real, content isn't. Swap these
-// for the actual project list (title, blurb, tags, image, link) once
-// it's ready; nothing else in the layout needs to change to support it.
-//
-// One `featured: true` project, not three equal ones: a row of three
-// identical cards is the single most common AI-portfolio tell (every
-// section reduces to the same three-box grid regardless of content).
-// One large featured slot plus two smaller ones also degrades better --
-// it still holds up with 2 projects or 5, where a fixed 3-up grid
-// doesn't.
+// Real projects, from the resume. One `featured: true`, not four equal
+// cards: a row of identical cards is the single most common AI-portfolio
+// tell (every section reduces to the same box grid regardless of
+// content). VisuallyLearn is the featured slot -- it's the one built and
+// shipped independently, with a real usage story (adopted by a coaching
+// class), rather than a feature shipped inside someone else's codebase.
 const PROJECTS = [
   {
-    id: 'project-one',
-    title: 'Project One',
-    blurb: 'A short description of what this project is and the specific problem it solved.',
-    tags: ['Tag A', 'Tag B'],
+    id: 'visually-learn',
+    title: 'VisuallyLearn',
+    blurb:
+      'A full-stack interactive physics learning platform, with a scraped and cleaned dataset of 10,000+ MCQs powering practice tests. Adopted by a coaching class for student use.',
+    tags: ['React', 'Supabase', 'Python'],
+    href: 'https://physics-visual-learning.vercel.app',
     featured: true,
   },
   {
-    id: 'project-two',
-    title: 'Project Two',
-    blurb: 'A one-line description of what this project is and the problem it solved.',
-    tags: ['Tag A', 'Tag B'],
+    id: 'resunova',
+    title: 'Resunova',
+    blurb:
+      'An AI-powered resume tailoring and job-matching platform. Shipped UI/UX improvements and a new CV builder tool as part of the engineering team.',
+    tags: ['Next.js', 'Full Stack'],
+    href: 'https://resunova.io',
   },
   {
-    id: 'project-three',
-    title: 'Project Three',
-    blurb: 'A one-line description of what this project is and the problem it solved.',
-    tags: ['Tag A', 'Tag B'],
+    id: 'parmar-properties',
+    title: 'Parmar Properties',
+    blurb:
+      'A scroll-animated real estate marketing site built with GSAP and Framer Motion, backed by Supabase as a lightweight CMS for blog content.',
+    tags: ['Next.js', 'GSAP'],
+    href: 'https://parmar-properties-two.vercel.app',
+  },
+  {
+    id: 'djs-astra',
+    title: 'DJS ASTRA',
+    blurb:
+      "The official site for DJSCE's combat robotics team, paired with a Python email pipeline automating sponsorship outreach.",
+    tags: ['Team site', 'Python automation'],
+    href: 'https://djs-astra.vercel.app',
   },
 ]
 
@@ -39,7 +49,9 @@ function WorkCard({ project, index }) {
     <a
       ref={ref}
       className={`work-card${project.featured ? ' work-card--featured' : ''}${visible ? ' is-visible' : ''}`}
-      href="#work"
+      href={project.href}
+      target="_blank"
+      rel="noreferrer"
       style={{ transitionDelay: `${index * 90}ms` }}
     >
       <div className="work-card__image" aria-hidden="true">
