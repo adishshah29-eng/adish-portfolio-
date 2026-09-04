@@ -25,6 +25,9 @@ import ch23Lightshaft from '../assets/chapters23/ch23_lightshaft.png'
 import ch23Water from '../assets/chapters23/ch23_water.png'
 import ch23RockLeft from '../assets/chapters23/ch23_rock_left.png'
 import ch23RockRight from '../assets/chapters23/ch23_rock_right.png'
+import ch23OrchidLeftNear from '../assets/chapters23/ch23_orchid_left_near.png'
+import ch23OrchidLeftFar from '../assets/chapters23/ch23_orchid_left_far.png'
+import ch23OrchidRightMid from '../assets/chapters23/ch23_orchid_right_mid.png'
 
 // Native canvas the layers were segmented from (px).
 const CANVAS_W = 1915
@@ -90,6 +93,27 @@ const CHAPTER23_X = 32
 const CH23_W = 1881
 const CH23_H = 836
 
+// Like frameToWorld, but for crops taken from the chapter 2/3 island's own
+// photo (CH23_W/CH23_H) instead of the main cave photo, and offset by the
+// island's world x. Chapter 1 gets real depth/parallax richness from many
+// small pieces at different depths (ceiling vines, mossy stones, and two
+// orchid patches sitting noticeably closer to camera than everything else)
+// -- not just a handful of full-frame layers. The island's original six
+// layers were exactly that handful, which is why it read flat/2D next to
+// chapter 1 despite using the same technique: this fills in the same kind
+// of depth-separated fragments (individual orchid clusters, each at its
+// own distance) that chapter 1 has and the island didn't.
+function ch23FrameToWorld(frame, depth) {
+  const scale = (BASE_DIST - depth) / BASE_DIST
+  const w = frame.w * REF_W * scale
+  const h = w * (frame.h / frame.w) * (CH23_H / CH23_W)
+  const cxFrac = frame.x + frame.w / 2 - 0.5
+  const cyFrac = frame.y + frame.h / 2 - 0.5
+  const x = CHAPTER23_X + cxFrac * REF_W * scale
+  const y = -cyFrac * (REF_W * scale) * (CH23_H / CH23_W)
+  return { x, y, w, h }
+}
+
 const LAYERS = [
   { tex: sourcePhoto, depth: -5.3, frame: { x: 0, y: 0, w: 1, h: 1 } },
   { tex: structureWallsVines, depth: -4.6, frame: { x: 0, y: 0, w: 1, h: 1 } },
@@ -124,6 +148,30 @@ const LAYERS = [
   { tex: ch23Water, depth: -3.2, rect: standaloneRect(CH23_W, CH23_H, -3.2, CHAPTER23_X, 0) },
   { tex: ch23RockLeft, depth: -1.6, rect: standaloneRect(CH23_W, CH23_H, -1.6, CHAPTER23_X, 0) },
   { tex: ch23RockRight, depth: -1.6, rect: standaloneRect(CH23_W, CH23_H, -1.6, CHAPTER23_X, 0) },
+  // Individual orchid clusters, cut from the same photo, each at its own
+  // depth -- this is what actually gives chapter 1 its parallax/3D read
+  // (many small pieces at different distances, not just a handful of
+  // full-frame layers), and what the island was missing. The near-left
+  // cluster sits well in front of the rocks for a deliberately strong
+  // pop, matching how chapter 1's own foreground orchid patches (depth
+  // 0.3) sit noticeably closer than everything else; the far-left and
+  // right clusters are ledge growth further back along the walls, given
+  // their own depth rather than being flattened into the structure layer.
+  {
+    tex: ch23OrchidLeftNear,
+    depth: -1.0,
+    rect: ch23FrameToWorld({ x: 0.0611, y: 0.2285, w: 0.126, h: 0.3577 }, -1.0),
+  },
+  {
+    tex: ch23OrchidLeftFar,
+    depth: -3.5,
+    rect: ch23FrameToWorld({ x: 0.2004, y: 0.1388, w: 0.1191, h: 0.3349 }, -3.5),
+  },
+  {
+    tex: ch23OrchidRightMid,
+    depth: -3.5,
+    rect: ch23FrameToWorld({ x: 0.7491, y: 0.1411, w: 0.118, h: 0.3266 }, -3.5),
+  },
 ]
 
 function clamp(v, lo, hi) {
