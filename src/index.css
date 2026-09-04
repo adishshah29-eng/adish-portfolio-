@@ -2,6 +2,17 @@
   color-scheme: dark;
 }
 
+/* Same file AdishName.jsx feeds to troika for the WebGL name text, now
+   also registered as a real CSS font so the flat sections after the
+   cave scene (Selected Work, Contact) can carry the same serif identity
+   instead of falling back to StoryText's plainer Georgia stand-in. */
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('./assets/fonts/playfair-display-700.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
 }

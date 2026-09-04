@@ -2,12 +2,15 @@
   /* Camera motion is continuous (no dwell/hold plateau -- see shots.js),
      so height just needs to give each shot-to-shot segment a consistent
      scroll budget as shots are added/removed, not extra distance for a
-     hold. Chapter 2-3 grew from 2 shots to 5 (matching chapter 1's own
-     five-shot cadence) -- 7 shots (6 segments) at 800vh gave each segment
-     ~113vh of the post-intro budget; 10 shots (9 segments) scales that up
-     to 1200vh to keep the same per-shot pace rather than compressing the
-     new shots into a smaller slice of an unchanged page. */
-  height: 1200vh;
+     hold. 10 shots (9 segments) at 1200vh gave each segment ~113vh of the
+     post-intro budget; the new final "into-the-mist" shot (11 shots, 10
+     segments) scales that up to 1333vh to keep the same per-shot pace.
+     This height is scoped to THIS container -- useStoryProgress measures
+     against its own ref, not document height -- so the flat sections
+     that follow it (Selected Work, Contact) don't stretch the shot
+     sequence out or throw off where shotProgress reaches 1. */
+  height: 1333vh;
+  position: relative;
 }
 
 .scene-sticky {

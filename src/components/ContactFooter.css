@@ -1,0 +1,62 @@
+.contact-footer {
+  background: #000;
+  color: #f4f1ea;
+  padding: 16vh 6vw 6vh;
+  text-align: center;
+  border-top: 1px solid rgba(244, 241, 234, 0.08);
+}
+
+.contact-footer h2 {
+  margin: 0 0 1.5rem;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+.contact-footer__email {
+  display: inline-block;
+  font-family: system-ui, sans-serif;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: #c9a86a;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(201, 168, 106, 0.4);
+  padding-bottom: 0.2rem;
+  margin-bottom: 3rem;
+  transition: border-color 0.3s ease, opacity 0.3s ease;
+}
+
+.contact-footer__email:hover,
+.contact-footer__email:focus-visible {
+  border-color: rgba(201, 168, 106, 0.9);
+}
+
+.contact-footer__socials {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 6vh;
+}
+
+.contact-footer__socials a {
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: #b8b2a3;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.contact-footer__socials a:hover,
+.contact-footer__socials a:focus-visible {
+  color: #f4f1ea;
+}
+
+.contact-footer__meta {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #55524a;
+}

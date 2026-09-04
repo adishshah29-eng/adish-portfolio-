@@ -1,20 +1,31 @@
+import { useRef } from 'react'
 import CaveScene from './components/CaveScene'
 import StoryText from './components/StoryText'
+import FogOverlay from './components/FogOverlay'
+import SelectedWork from './components/SelectedWork'
+import ContactFooter from './components/ContactFooter'
 import useStoryProgress from './hooks/useStoryProgress'
-import { remapAfterIntro } from './scene/shots'
+import { remapAfterIntro, fogOpacityFor } from './scene/shots'
 import './App.css'
 
 function App() {
-  const progress = useStoryProgress()
+  const sceneRef = useRef(null)
+  const progress = useStoryProgress(sceneRef)
   const shotProgress = remapAfterIntro(progress)
+  const fogOpacity = fogOpacityFor(shotProgress)
 
   return (
-    <div className="scene-scroll">
-      <div className="scene-sticky">
-        <CaveScene shotProgress={shotProgress} />
-        <StoryText shotProgress={shotProgress} rawProgress={progress} />
+    <>
+      <div className="scene-scroll" ref={sceneRef}>
+        <div className="scene-sticky">
+          <CaveScene shotProgress={shotProgress} />
+          <StoryText shotProgress={shotProgress} rawProgress={progress} fogOpacity={fogOpacity} />
+          <FogOverlay opacity={fogOpacity} />
+        </div>
       </div>
-    </div>
+      <SelectedWork />
+      <ContactFooter />
+    </>
   )
 }
 

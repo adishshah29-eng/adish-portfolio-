@@ -1,0 +1,69 @@
+.fog-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 5;
+  /* opacity is set inline, driven by scroll -- this file only handles
+     the mist's own look and its continuous drift animation. */
+}
+
+.fog-overlay__puff {
+  position: absolute;
+  width: 140vmax;
+  height: 140vmax;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  filter: blur(40px);
+  mix-blend-mode: screen;
+}
+
+.fog-overlay__puff--a {
+  background: radial-gradient(circle, rgba(233, 224, 201, 0.9) 0%, rgba(233, 224, 201, 0) 60%);
+  transform: translate(-52%, -46%) scale(0.8);
+  animation: fog-drift-a 26s ease-in-out infinite;
+}
+
+.fog-overlay__puff--b {
+  background: radial-gradient(circle, rgba(210, 199, 178, 0.85) 0%, rgba(210, 199, 178, 0) 58%);
+  transform: translate(-46%, -54%) scale(0.85);
+  animation: fog-drift-b 32s ease-in-out infinite;
+}
+
+.fog-overlay__puff--c {
+  background: radial-gradient(circle, rgba(244, 238, 222, 0.8) 0%, rgba(244, 238, 222, 0) 55%);
+  transform: translate(-50%, -50%) scale(0.75);
+  animation: fog-drift-c 21s ease-in-out infinite;
+}
+
+/* The gradients alone thin out toward the very edges of the viewport at
+   any single moment -- this flat layer underneath guarantees the overlay
+   reaches genuinely full, edge-to-edge coverage once opacity hits 1,
+   rather than a mist that's dense in the middle and faintly sheer at the
+   corners. */
+.fog-overlay__wash {
+  position: absolute;
+  inset: 0;
+  background: #e9e0c9;
+}
+
+@keyframes fog-drift-a {
+  0%, 100% { transform: translate(-52%, -46%) scale(0.8); }
+  50% { transform: translate(-47%, -52%) scale(0.95); }
+}
+
+@keyframes fog-drift-b {
+  0%, 100% { transform: translate(-46%, -54%) scale(0.85); }
+  50% { transform: translate(-53%, -47%) scale(1); }
+}
+
+@keyframes fog-drift-c {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.75); }
+  50% { transform: translate(-48%, -45%) scale(0.9); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fog-overlay__puff {
+    animation: none;
+  }
+}

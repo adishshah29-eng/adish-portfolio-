@@ -127,4 +127,33 @@ export const SHOTS = [
     heading: 'Surface',
     body: "Even still water remembers where it's been.",
   },
+  // Final beat: the camera pushes further in and centers on the archway's
+  // light source, deeper than any shot before it, while FogOverlay (see
+  // fogOpacityFor below) rises to fully cover the screen over this same
+  // segment -- "the camera goes into the middle" and "mist covers the
+  // screen" are one continuous motion, not two separately-timed effects.
+  // No heading/body: this shot exists to transition out, not to add
+  // another line to read, and text would just be fogged over anyway.
+  {
+    id: 'into-the-mist',
+    position: [32, 0.0, 3.4],
+    target: [32, 0.3, -4.5],
+    heading: '',
+    body: '',
+  },
 ]
+
+function smoothstep(t) {
+  const c = clamp01(t)
+  return c * c * (3 - 2 * c)
+}
+
+// Fog ramps across the LAST shot-to-shot segment only (from
+// "surface-reflections" into "into-the-mist"), reusing that segment's
+// existing scroll budget rather than adding a new one -- so the dolly-in
+// and the mist rising are driven by the exact same stretch of scroll.
+const FOG_RAMP_START = (SHOTS.length - 2) / (SHOTS.length - 1)
+
+export function fogOpacityFor(shotProgress) {
+  return smoothstep((shotProgress - FOG_RAMP_START) / (1 - FOG_RAMP_START))
+}

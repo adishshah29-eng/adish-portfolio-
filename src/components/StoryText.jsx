@@ -32,7 +32,7 @@ const ZERO_DIST = SEGMENT / 2
 // then a brief fade-in of its own rather than an abrupt pop.
 const INTRO_GATE_FADE = 0.02
 
-export default function StoryText({ shotProgress, rawProgress }) {
+export default function StoryText({ shotProgress, rawProgress, fogOpacity = 0 }) {
   const introGate = smoothstep((rawProgress - INTRO_FRACTION) / INTRO_GATE_FADE)
 
   return (
@@ -41,7 +41,12 @@ export default function StoryText({ shotProgress, rawProgress }) {
         const shotT = i / (N - 1)
         const dist = Math.abs(shotProgress - shotT)
         const shotOpacity = 1 - smoothstep(dist / ZERO_DIST)
-        const opacity = i === 0 ? shotOpacity * introGate : shotOpacity
+        // The final shot has no heading/body (see shots.js) and sits
+        // right where fog rises to fully opaque -- fading every shot's
+        // text out as fog comes in keeps the second-to-last shot's own
+        // text from lingering, readable, under a half-opaque mist instead
+        // of disappearing along with the scene it's describing.
+        const opacity = (i === 0 ? shotOpacity * introGate : shotOpacity) * (1 - fogOpacity)
         return (
           <div
             key={shot.id}
