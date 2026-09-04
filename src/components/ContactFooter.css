@@ -59,33 +59,94 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .contact-footer {
+  .contact-footer,
+  .contact-footer__cta a,
+  .contact-footer__cta a::after,
+  .contact-footer__email,
+  .contact-footer__socials a {
     transition: none;
   }
 }
 
-.contact-footer h2 {
-  margin: 0 0 1.5rem;
+/* A soft gold glow sitting behind the CTA, not decoration for its own
+   sake -- it's the same light-source language the chapters themselves
+   use ("every ray in this place begins here"), so the footer's one
+   interactive moment is lit like the cave's own light rather than
+   floating on a flat black. A gradient, not filter: blur, so there's no
+   extra paint cost. */
+.contact-footer__cta {
+  position: relative;
+  margin: 0 0 1rem;
+}
+
+.contact-footer__cta::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: min(60vw, 640px);
+  height: 220px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, rgba(201, 168, 106, 0.16), transparent 70%);
+  pointer-events: none;
+}
+
+.contact-footer__cta a {
+  display: inline-block;
+  position: relative;
   font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
   font-weight: 700;
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(2.5rem, 9vw, 6rem);
+  letter-spacing: -0.01em;
+  color: #f4f1ea;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.contact-footer__cta a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.08em;
+  height: 2px;
+  background: #c9a86a;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-footer__cta a:hover,
+.contact-footer__cta a:focus-visible {
+  color: #c9a86a;
+}
+
+.contact-footer__cta a:hover::after,
+.contact-footer__cta a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.contact-footer__cta a:active {
+  opacity: 0.85;
 }
 
 .contact-footer__email {
   display: inline-block;
   font-family: system-ui, sans-serif;
-  font-size: clamp(1.1rem, 2vw, 1.4rem);
-  color: #c9a86a;
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+  color: #b8b2a3;
   text-decoration: none;
-  border-bottom: 1px solid rgba(201, 168, 106, 0.4);
+  border-bottom: 1px solid rgba(201, 168, 106, 0.35);
   padding-bottom: 0.2rem;
-  margin-bottom: 3rem;
-  transition: border-color 0.3s ease, opacity 0.3s ease;
+  margin-bottom: 4rem;
+  transition: border-color 0.3s ease, color 0.3s ease;
 }
 
 .contact-footer__email:hover,
 .contact-footer__email:focus-visible {
   border-color: rgba(201, 168, 106, 0.9);
+  color: #c9a86a;
 }
 
 .contact-footer__socials {

@@ -46,7 +46,14 @@ export default function ContactFooter() {
   const [ref, visible] = useRevealOnScroll()
   return (
     <footer ref={ref} className={`contact-footer${visible ? ' is-visible' : ''}`} id="contact">
-      <h2>Get in touch</h2>
+      {/* The heading itself is the CTA, not a static label sitting above a
+          separate small link -- large clickable typography reads as a
+          considered closing statement rather than a filled-in footer
+          template. The literal address stays underneath, smaller, for
+          anyone who wants to read or copy it directly. */}
+      <h2 className="contact-footer__cta">
+        <a href={`mailto:${EMAIL}`}>Get in touch</a>
+      </h2>
       <a className="contact-footer__email" href={`mailto:${EMAIL}`}>
         {EMAIL}
       </a>
