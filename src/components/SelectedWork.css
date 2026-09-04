@@ -103,21 +103,51 @@
   box-shadow: 0 12px 32px -16px rgba(44, 100, 89, 0.45);
 }
 
-/* Textured placeholder instead of a flat two-stop gradient -- layered
-   radial gradients pulling all three of the cave's sampled tones (gold
-   light-shaft, teal pool water, olive-moss wall), plus a very faint
-   grain, so an empty image slot still reads as "this cave" rather than
-   as an obviously-blank box while real project imagery is pending. */
+/* The frame: fixed size, clips its contents, never itself transforms.
+   .work-card__image-fill (below) is the layer that actually moves, so a
+   hover zoom or reveal scale-in never spills past the card's own edges
+   or fights its border-radius. */
 .work-card__image {
   aspect-ratio: 16 / 10;
   border-radius: 2px;
   margin-bottom: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Textured placeholder instead of a flat two-stop gradient -- layered
+   radial gradients pulling all three of the cave's sampled tones (gold
+   light-shaft, teal pool water, olive-moss wall), plus a very faint
+   grain, so an empty image slot still reads as "this cave" rather than
+   as an obviously-blank box while real project imagery is pending.
+   Sized slightly larger than its frame (inset: -4%) so the hover/reveal
+   scale below never uncovers an edge. */
+.work-card__image-fill {
+  position: absolute;
+  inset: -4%;
   background-image:
     radial-gradient(circle at 18% 20%, rgba(201, 168, 106, 0.26), transparent 45%),
     radial-gradient(circle at 82% 78%, rgba(92, 187, 163, 0.22), transparent 50%),
     linear-gradient(135deg, rgba(35, 42, 26, 0.85), rgba(10, 9, 6, 0.95));
-  position: relative;
-  overflow: hidden;
+  transform: scale(1.08);
+  filter: brightness(0.82);
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1), filter 1s ease;
+}
+
+/* Settles into place as the card reveals -- the same "grows into focus"
+   move the cave camera itself makes throughout the scene, echoed here
+   instead of a plain fade. */
+.work-card.is-visible .work-card__image-fill {
+  transform: scale(1);
+  filter: brightness(1);
+}
+
+/* A second, faster zoom on hover, independent of the reveal state --
+   real hover physics instead of just a border-color swap. */
+.work-card:hover .work-card__image-fill,
+.work-card:focus-visible .work-card__image-fill {
+  transform: scale(1.06);
+  transition-duration: 0.7s;
 }
 
 .work-card__image::after {
@@ -132,6 +162,7 @@
     transparent 1px,
     transparent 3px
   );
+  pointer-events: none;
 }
 
 .work-card--featured .work-card__image {
@@ -191,7 +222,13 @@
 
 @media (prefers-reduced-motion: reduce) {
   .selected-work__intro,
-  .work-card {
+  .work-card,
+  .work-card__image-fill {
     transition: none;
+  }
+
+  .work-card__image-fill {
+    transform: none;
+    filter: none;
   }
 }

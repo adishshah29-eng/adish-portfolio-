@@ -42,7 +42,9 @@ function WorkCard({ project, index }) {
       href="#work"
       style={{ transitionDelay: `${index * 90}ms` }}
     >
-      <div className="work-card__image" aria-hidden="true" />
+      <div className="work-card__image" aria-hidden="true">
+        <div className="work-card__image-fill" />
+      </div>
       <div className="work-card__body">
         <h3>{project.title}</h3>
         <p>{project.blurb}</p>
