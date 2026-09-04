@@ -14,7 +14,18 @@
   position: sticky;
   top: 0;
   width: 100%;
+  /* 100vh on mobile is measured against the LARGE viewport (address bar
+     hidden), but the sticky element only actually needs to fill whatever
+     is visible RIGHT NOW -- when the address bar is showing (e.g. once
+     the user stops scrolling at the very end), a plain 100vh sticky
+     element is taller than the real visible area, so reaching its full
+     bottom needs a bit of extra scroll that shouldn't exist -- the story
+     reads as "done" but the page keeps giving under your thumb. 100dvh
+     tracks the real current viewport instead, so this never happens.
+     Falls back to 100vh for the handful of older/desktop browsers that
+     don't support dvh -- CSS just ignores the later, understood value. */
   height: 100vh;
+  height: 100dvh;
 }
 
 .scene-sticky canvas {

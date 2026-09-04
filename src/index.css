@@ -11,6 +11,11 @@ body {
   margin: 0;
   padding: 0;
   background: #000;
+  /* Without this, mobile browsers let the page rubber-band past its own
+     bottom edge (and top) on overscroll -- on a page that's supposed to
+     feel like it locks onto a fixed final frame, that bounce reads as
+     "there's more to scroll" even though the story is actually over. */
+  overscroll-behavior-y: none;
 }
 
 #root {
