@@ -30,6 +30,8 @@ function LinkedInIcon() {
 // a small data array (not hardcoded markup per link) so adding a
 // platform later, once there's a real one to add, is a one-line change.
 const EMAIL = 'adishshah29@gmail.com'
+const PHONE = '9819486535'
+const PHONE_DISPLAY = '+91 98194 86535'
 const SOCIALS = [
   { label: 'GitHub', Icon: GitHubIcon, href: 'https://github.com/adishshah29-eng' },
   { label: 'LinkedIn', Icon: LinkedInIcon, href: 'https://linkedin.com/in/adishshah29' },
@@ -47,9 +49,14 @@ export default function ContactFooter() {
       <h2 className="contact-footer__cta">
         <a href={`mailto:${EMAIL}`}>Get in touch</a>
       </h2>
-      <a className="contact-footer__email" href={`mailto:${EMAIL}`}>
-        {EMAIL}
-      </a>
+      <div className="contact-footer__reach">
+        <a className="contact-footer__email" href={`mailto:${EMAIL}`}>
+          {EMAIL}
+        </a>
+        <a className="contact-footer__email" href={`tel:+91${PHONE}`}>
+          {PHONE_DISPLAY}
+        </a>
+      </div>
       <nav className="contact-footer__socials" aria-label="Social links">
         {SOCIALS.map(({ label, Icon, href }) => (
           <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={label}>

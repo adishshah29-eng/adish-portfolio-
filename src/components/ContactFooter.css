@@ -63,6 +63,7 @@
   .contact-footer__cta a,
   .contact-footer__cta a::after,
   .contact-footer__cta::before,
+  .contact-footer__reach,
   .contact-footer__email,
   .contact-footer__socials,
   .contact-footer__socials a,
@@ -72,7 +73,7 @@
     animation: none;
   }
 
-  .contact-footer__email,
+  .contact-footer__reach,
   .contact-footer__socials,
   .contact-footer__links,
   .contact-footer__meta {
@@ -155,6 +156,15 @@
   opacity: 0.85;
 }
 
+.contact-footer__reach {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 4rem;
+}
+
 .contact-footer__email {
   display: inline-block;
   font-family: system-ui, sans-serif;
@@ -163,7 +173,6 @@
   text-decoration: none;
   border-bottom: 1px solid rgba(201, 168, 106, 0.35);
   padding-bottom: 0.2rem;
-  margin-bottom: 4rem;
   transition: border-color 0.3s ease, color 0.3s ease;
 }
 
@@ -281,7 +290,7 @@
    is visible, instead of the whole block appearing as one flat fade --
    the same staggered-entrance idea the work cards use, applied here to
    a single section's own children rather than a list of siblings. */
-.contact-footer__email,
+.contact-footer__reach,
 .contact-footer__socials,
 .contact-footer__links,
 .contact-footer__meta {
@@ -290,7 +299,7 @@
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.contact-footer.is-visible .contact-footer__email {
+.contact-footer.is-visible .contact-footer__reach {
   transition-delay: 0.1s;
 }
 
@@ -306,7 +315,7 @@
   transition-delay: 0.4s;
 }
 
-.contact-footer.is-visible .contact-footer__email,
+.contact-footer.is-visible .contact-footer__reach,
 .contact-footer.is-visible .contact-footer__socials,
 .contact-footer.is-visible .contact-footer__links,
 .contact-footer.is-visible .contact-footer__meta {

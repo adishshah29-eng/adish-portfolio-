@@ -10,13 +10,13 @@
     radial-gradient(ellipse 55% 45% at 95% 90%, rgba(201, 168, 106, 0.05), transparent 60%),
     #0a0906;
   color: #f4f1ea;
-  padding: 14vh 6vw 16vh;
+  padding: 14vh 6vw 12vh;
   overflow: hidden;
 }
 
 .selected-work__intro {
   max-width: 640px;
-  margin: 0 auto 8vh;
+  margin: 0 auto 6vh;
   text-align: center;
   opacity: 0;
   transform: translateY(16px);
@@ -56,57 +56,132 @@
   opacity: 0.55;
 }
 
-/* Featured project (wide) + two smaller ones stacked beside it -- not
-   three equal cards. Degrades to one column on narrow viewports, in
-   which case the featured piece simply reads first. */
-.selected-work__grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 2.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  align-items: start;
+.selected-work__carousel-wrap {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
-.selected-work__secondary {
+.selected-work__carousel-wrap.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* A coverflow-style 3D carousel instead of a grid -- card positions
+   (translateX/translateZ/rotateY/scale/opacity) are computed per-card in
+   JS from each card's offset from the active index, not driven by CSS,
+   so the same logic handles wraparound and works identically at any
+   card count. perspective lives on the viewport; each card is an
+   absolutely-positioned, centered layer that the JS transform then
+   offsets sideways and back in depth.
+   Nav buttons float as overlays at the edges rather than sitting in a
+   flex row beside the viewport -- a flex row shrinks the viewport to
+   make room for them, but the card's own width doesn't shrink to
+   match (it's sized off the full carousel width), so on narrow
+   viewports the card ended up wider than the space left for it and
+   rendered underneath the buttons instead of beside them. Floating
+   the buttons over a full-width viewport sidesteps that entirely. */
+.work-carousel {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.work-carousel__viewport {
+  position: relative;
+  width: 100%;
+  height: clamp(460px, 58vw, 600px);
+  perspective: 1600px;
+  outline: none;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.work-carousel__viewport:active {
+  cursor: grabbing;
+}
+
+.work-carousel__track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.work-carousel__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
   display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 241, 234, 0.16);
+  background: rgba(10, 9, 6, 0.55);
+  color: #f4f1ea;
+  cursor: pointer;
+  transition: border-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.work-carousel__nav--prev {
+  left: 0;
+}
+
+.work-carousel__nav--next {
+  right: 0;
+}
+
+.work-carousel__nav svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.work-carousel__nav:hover,
+.work-carousel__nav:focus-visible {
+  border-color: rgba(201, 168, 106, 0.6);
+  color: #c9a86a;
+  transform: translateY(-50%) scale(1.06);
+  box-shadow: 0 6px 18px -8px rgba(44, 100, 89, 0.55);
+}
+
+.work-carousel__nav:active {
+  transform: translateY(-50%) scale(0.96);
 }
 
 .work-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(78vw, 600px);
   display: block;
   text-decoration: none;
   color: inherit;
   border: 1px solid rgba(244, 241, 234, 0.1);
   border-radius: 4px;
   padding: 1.5rem;
-  background: rgba(244, 241, 234, 0.02);
-  transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease,
-    opacity 0.7s ease, translate 0.7s ease;
-  opacity: 0;
-  translate: 0 16px;
+  background: rgba(244, 241, 234, 0.03);
+  will-change: transform, opacity;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease, border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
-.work-card.is-visible {
-  opacity: 1;
-  translate: 0 0;
+.work-card.is-active {
+  border-color: rgba(201, 168, 106, 0.4);
 }
 
-.work-card:hover,
-.work-card:focus-visible {
-  border-color: rgba(201, 168, 106, 0.5);
-  background: rgba(244, 241, 234, 0.04);
-  transform: translateY(-4px);
-  /* Paired with the gold border so hover reads as two cave tones together
-     (light + water), not gold on its own. */
-  box-shadow: 0 12px 32px -16px rgba(44, 100, 89, 0.45);
+.work-card.is-active:hover,
+.work-card.is-active:focus-visible {
+  border-color: rgba(201, 168, 106, 0.65);
+  box-shadow: 0 16px 40px -18px rgba(44, 100, 89, 0.5);
 }
 
 /* The frame: fixed size, clips its contents, never itself transforms.
    .work-card__image-fill (below) is the layer that actually moves, so a
-   hover zoom or reveal scale-in never spills past the card's own edges
-   or fights its border-radius. */
+   hover zoom never spills past the card's own edges or fights its
+   border-radius. */
 .work-card__image {
   aspect-ratio: 16 / 10;
   border-radius: 2px;
@@ -120,8 +195,8 @@
    light-shaft, teal pool water, olive-moss wall), plus a very faint
    grain, so an empty image slot still reads as "this cave" rather than
    as an obviously-blank box while real project imagery is pending.
-   Sized slightly larger than its frame (inset: -4%) so the hover/reveal
-   scale below never uncovers an edge. */
+   Sized slightly larger than its frame (inset: -4%) so the hover scale
+   below never uncovers an edge. */
 .work-card__image-fill {
   position: absolute;
   inset: -4%;
@@ -129,25 +204,17 @@
     radial-gradient(circle at 18% 20%, rgba(201, 168, 106, 0.26), transparent 45%),
     radial-gradient(circle at 82% 78%, rgba(92, 187, 163, 0.22), transparent 50%),
     linear-gradient(135deg, rgba(35, 42, 26, 0.85), rgba(10, 9, 6, 0.95));
-  transform: scale(1.08);
-  filter: brightness(0.82);
-  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1), filter 1s ease;
-}
-
-/* Settles into place as the card reveals -- the same "grows into focus"
-   move the cave camera itself makes throughout the scene, echoed here
-   instead of a plain fade. */
-.work-card.is-visible .work-card__image-fill {
   transform: scale(1);
   filter: brightness(1);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.7s ease;
 }
 
-/* A second, faster zoom on hover, independent of the reveal state --
-   real hover physics instead of just a border-color swap. */
-.work-card:hover .work-card__image-fill,
-.work-card:focus-visible .work-card__image-fill {
+/* Real hover physics on the active card only -- side cards are already
+   rotated/scaled away in 3D and clicking them re-centers rather than
+   zooming, so a hover-zoom on an off-axis card would just look odd. */
+.work-card.is-active:hover .work-card__image-fill,
+.work-card.is-active:focus-visible .work-card__image-fill {
   transform: scale(1.06);
-  transition-duration: 0.7s;
 }
 
 .work-card__image::after {
@@ -163,14 +230,6 @@
     transparent 3px
   );
   pointer-events: none;
-}
-
-.work-card--featured .work-card__image {
-  aspect-ratio: 16 / 11;
-}
-
-.work-card--featured h3 {
-  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
 }
 
 .work-card h3 {
@@ -214,21 +273,74 @@
   content: none;
 }
 
-@media (max-width: 860px) {
-  .selected-work__grid {
-    grid-template-columns: 1fr;
+/* Only the active card's title/blurb/tags are visible -- see the
+   comment in SelectedWork.jsx. Opacity, not display:none, so the card's
+   overall height (and its vertical centering) never shifts as the
+   active card changes. */
+.work-card__body {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.work-card.is-active .work-card__body {
+  opacity: 1;
+  transition-delay: 0.15s;
+}
+
+.work-carousel__dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 2.5rem;
+}
+
+.work-carousel__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 241, 234, 0.3);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.work-carousel__dot:hover,
+.work-carousel__dot:focus-visible {
+  border-color: rgba(201, 168, 106, 0.7);
+}
+
+.work-carousel__dot.is-active {
+  background: #c9a86a;
+  border-color: #c9a86a;
+  transform: scale(1.3);
+}
+
+@media (max-width: 640px) {
+  .work-carousel__nav {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+
+  .work-carousel__nav svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .work-card {
+    padding: 1.1rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .selected-work__intro,
+  .selected-work__carousel-wrap,
   .work-card,
-  .work-card__image-fill {
+  .work-card__image-fill,
+  .work-card__body,
+  .work-carousel__nav,
+  .work-carousel__dot {
     transition: none;
-  }
-
-  .work-card__image-fill {
-    transform: none;
-    filter: none;
   }
 }
