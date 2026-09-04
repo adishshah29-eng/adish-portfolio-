@@ -64,6 +64,14 @@ export default function ContactFooter() {
           </a>
         ))}
       </nav>
+      {/* A single-page scroll site has no persistent nav, so these are the
+          only way back to the top or across to the work section without
+          scrolling by hand -- real navigation, not decoration standing in
+          for content. */}
+      <nav className="contact-footer__links" aria-label="Quick links">
+        <a href="#top">Back to top</a>
+        <a href="#work">Selected work</a>
+      </nav>
       <p className="contact-footer__meta">The Hollow, {new Date().getFullYear()}</p>
     </footer>
   )

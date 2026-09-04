@@ -62,9 +62,22 @@
   .contact-footer,
   .contact-footer__cta a,
   .contact-footer__cta a::after,
+  .contact-footer__cta::before,
   .contact-footer__email,
-  .contact-footer__socials a {
+  .contact-footer__socials,
+  .contact-footer__socials a,
+  .contact-footer__links,
+  .contact-footer__links a::after {
     transition: none;
+    animation: none;
+  }
+
+  .contact-footer__email,
+  .contact-footer__socials,
+  .contact-footer__links,
+  .contact-footer__meta {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -90,6 +103,17 @@
   transform: translate(-50%, -50%);
   background: radial-gradient(ellipse, rgba(201, 168, 106, 0.16), transparent 70%);
   pointer-events: none;
+  /* Slow breathing rather than a static glow -- light in the cave scene
+     itself is never perfectly still (the god-ray drifts, the fog rolls),
+     so a dead-flat glow here would be the one static thing on an
+     otherwise living page. Kept slow and low-amplitude so it reads as
+     ambient, not as something demanding attention. */
+  animation: footer-glow-breathe 7s ease-in-out infinite;
+}
+
+@keyframes footer-glow-breathe {
+  0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
 }
 
 .contact-footer__cta a {
@@ -154,7 +178,7 @@
   justify-content: center;
   gap: 1.75rem;
   flex-wrap: wrap;
-  margin-bottom: 6vh;
+  margin-bottom: 3.5rem;
 }
 
 .contact-footer__socials a {
@@ -185,6 +209,65 @@
   height: 1.1rem;
 }
 
+/* Dot-separated text links, matching the same restrained pattern the
+   work-card tags already use -- not a second, differently-styled nav
+   system invented just for the footer. */
+.contact-footer__links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 6vh;
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.contact-footer__links a {
+  position: relative;
+  color: #b8b2a3;
+  text-decoration: none;
+  padding-bottom: 0.15rem;
+  transition: color 0.3s ease;
+}
+
+.contact-footer__links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: #c9a86a;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-footer__links a:hover,
+.contact-footer__links a:focus-visible {
+  color: #f4f1ea;
+}
+
+.contact-footer__links a:hover::after,
+.contact-footer__links a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.contact-footer__links::before {
+  content: '\00b7';
+  order: 1;
+  color: rgba(201, 168, 106, 0.5);
+}
+
+.contact-footer__links a:first-child {
+  order: 0;
+}
+
+.contact-footer__links a:last-child {
+  order: 2;
+}
+
 .contact-footer__meta {
   margin: 0;
   font-family: system-ui, sans-serif;
@@ -192,4 +275,41 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #55524a;
+}
+
+/* Everything below the CTA cascades in on its own delay once the footer
+   is visible, instead of the whole block appearing as one flat fade --
+   the same staggered-entrance idea the work cards use, applied here to
+   a single section's own children rather than a list of siblings. */
+.contact-footer__email,
+.contact-footer__socials,
+.contact-footer__links,
+.contact-footer__meta {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.contact-footer.is-visible .contact-footer__email {
+  transition-delay: 0.1s;
+}
+
+.contact-footer.is-visible .contact-footer__socials {
+  transition-delay: 0.2s;
+}
+
+.contact-footer.is-visible .contact-footer__links {
+  transition-delay: 0.3s;
+}
+
+.contact-footer.is-visible .contact-footer__meta {
+  transition-delay: 0.4s;
+}
+
+.contact-footer.is-visible .contact-footer__email,
+.contact-footer.is-visible .contact-footer__socials,
+.contact-footer.is-visible .contact-footer__links,
+.contact-footer.is-visible .contact-footer__meta {
+  opacity: 1;
+  transform: translateY(0);
 }

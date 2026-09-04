@@ -18,7 +18,7 @@ function App() {
   return (
     <>
       <Preloader />
-      <div className="scene-scroll" ref={sceneRef}>
+      <div className="scene-scroll" ref={sceneRef} id="top">
         <div className="scene-sticky">
           <CaveScene shotProgress={shotProgress} />
           <StoryText shotProgress={shotProgress} rawProgress={progress} fogOpacity={fogOpacity} />
