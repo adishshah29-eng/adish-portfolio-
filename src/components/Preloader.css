@@ -1,0 +1,59 @@
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0a0906;
+  transition: opacity 0.7s ease;
+}
+
+.preloader--leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.preloader__mark {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  letter-spacing: 0.04em;
+  color: #f4f1ea;
+  margin-bottom: 2.5rem;
+  opacity: 0.92;
+}
+
+.preloader__bar {
+  width: min(220px, 40vw);
+  height: 1px;
+  background: rgba(244, 241, 234, 0.14);
+  overflow: hidden;
+}
+
+.preloader__bar-fill {
+  height: 100%;
+  background: #c9a86a;
+  transition: width 0.25s ease-out;
+}
+
+.preloader__count {
+  margin-top: 1rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: #8f8a7c;
+  font-variant-numeric: tabular-nums;
+}
+
+.preloader__count::after {
+  content: '%';
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader,
+  .preloader__bar-fill {
+    transition: none;
+  }
+}

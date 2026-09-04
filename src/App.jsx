@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import CaveScene from './components/CaveScene'
 import StoryText from './components/StoryText'
 import FogOverlay from './components/FogOverlay'
+import Preloader from './components/Preloader'
 import SelectedWork from './components/SelectedWork'
 import ContactFooter from './components/ContactFooter'
 import useStoryProgress from './hooks/useStoryProgress'
@@ -16,6 +17,7 @@ function App() {
 
   return (
     <>
+      <Preloader />
       <div className="scene-scroll" ref={sceneRef}>
         <div className="scene-sticky">
           <CaveScene shotProgress={shotProgress} />
