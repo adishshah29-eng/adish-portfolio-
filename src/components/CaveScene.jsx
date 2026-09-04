@@ -270,18 +270,18 @@ function CameraRig({ progress }) {
   return null
 }
 
-export default function CaveScene({ progress }) {
+export default function CaveScene({ shotProgress }) {
   return (
     <Canvas
       camera={{ position: SHOTS[0].position, fov: 30, near: 0.1, far: 100 }}
       gl={{ antialias: true }}
     >
       <ResponsiveCameraFov />
-      <CameraRig progress={progress} />
+      <CameraRig progress={shotProgress} />
       {LAYERS.map((layer, i) => (
         <Layer key={i} {...layer} />
       ))}
-      <AdishName progress={progress} />
+      <AdishName />
     </Canvas>
   )
 }

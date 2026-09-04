@@ -1,4 +1,4 @@
-import { SHOTS, DWELL_FRACTION } from '../scene/shots'
+import { SHOTS, DWELL_FRACTION, INTRO_FRACTION } from '../scene/shots'
 import './StoryText.css'
 
 function clamp(v, lo, hi) {
@@ -24,13 +24,24 @@ const SEGMENT = 1 / (N - 1)
 const FULL_DIST = DWELL_FRACTION * SEGMENT
 const ZERO_DIST = SEGMENT / 2
 
-export default function StoryText({ progress }) {
+// shotProgress is clamped flat at 0 for the entire locked-camera intro
+// (see remapAfterIntro), so without this, shot 0's heading reads as
+// "already arrived" and shows in full right from the first frame --
+// simultaneously with AdishName still wiping in. Gate it on raw scroll
+// progress instead: nothing shows until the intro's own reveal is done,
+// then a brief fade-in of its own rather than an abrupt pop.
+const INTRO_GATE_FADE = 0.02
+
+export default function StoryText({ shotProgress, rawProgress }) {
+  const introGate = smoothstep((rawProgress - INTRO_FRACTION) / INTRO_GATE_FADE)
+
   return (
     <div className="story-text">
       {SHOTS.map((shot, i) => {
         const shotT = i / (N - 1)
-        const dist = Math.abs(progress - shotT)
-        const opacity = 1 - smoothstep((dist - FULL_DIST) / (ZERO_DIST - FULL_DIST))
+        const dist = Math.abs(shotProgress - shotT)
+        const shotOpacity = 1 - smoothstep((dist - FULL_DIST) / (ZERO_DIST - FULL_DIST))
+        const opacity = i === 0 ? shotOpacity * introGate : shotOpacity
         return (
           <div
             key={shot.id}

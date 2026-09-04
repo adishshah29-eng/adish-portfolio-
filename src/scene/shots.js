@@ -23,6 +23,26 @@
 // before shot 0, nothing after the last one) only get it once, at the
 // scroll extremes where the page can't scroll further anyway.
 export const DWELL_FRACTION = 0.38
+
+// The page opens on a locked intro: "Adish Portfolio" wipes in
+// letter-by-letter as the very first bit of scroll (see AdishName.jsx),
+// camera pinned at shot 0 the entire time -- getShotState's raw progress
+// stays clamped to exactly shot 0 until this fraction of the page is
+// behind you, so the shot-to-shot camera sequence genuinely cannot begin
+// until the name has fully revealed. remapAfterIntro turns the remaining
+// (1 - INTRO_FRACTION) of the page back into a clean 0..1 for the shot
+// sequence, so the shot pacing tuned elsewhere doesn't need to know this
+// exists.
+export const INTRO_FRACTION = 0.15
+
+function clamp01(v) {
+  return Math.min(1, Math.max(0, v))
+}
+
+export function remapAfterIntro(progress) {
+  return clamp01((progress - INTRO_FRACTION) / (1 - INTRO_FRACTION))
+}
+
 // These are flat photo planes, not a wraparound panorama -- there is no
 // real content past the edge of the source photo. A wide swing of the
 // look-at target (rotating the camera far off-axis) points the frustum

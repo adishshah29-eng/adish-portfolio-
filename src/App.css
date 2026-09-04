@@ -2,8 +2,11 @@
   /* 7 shots / 6 segments, each with a dwell-hold on both sides (see
      DWELL_FRACTION in shots.js) -- this needs to be real scroll distance,
      not just a proportional split, or "hold at each shot to give people
-     time to read" is meaningless on a short page. */
-  height: 1100vh;
+     time to read" is meaningless on a short page. 1300vh = 1100vh of
+     shot sequence (the previously-tuned budget) plus the locked-camera
+     intro (INTRO_FRACTION in shots.js, 15% of the page) added on top,
+     not carved out of it. */
+  height: 1300vh;
 }
 
 .scene-sticky {
