@@ -1,6 +1,14 @@
+/* Base stays the exact void tone FogOverlay's wash blends toward (see
+   FogOverlay.jsx's DARK constant) -- the seamless fog handoff depends on
+   this section's true background matching that value pixel-for-pixel.
+   The ambient wash below sits on TOP of it as a low-alpha overlay, so it
+   never actually shifts the base color the fog is blending into. */
 .selected-work {
   position: relative;
-  background: #0a0906;
+  background:
+    radial-gradient(ellipse 60% 50% at 8% 8%, rgba(92, 187, 163, 0.05), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 95% 90%, rgba(201, 168, 106, 0.05), transparent 60%),
+    #0a0906;
   color: #f4f1ea;
   padding: 14vh 6vw 16vh;
   overflow: hidden;
@@ -33,6 +41,19 @@
   font-family: system-ui, sans-serif;
   font-size: clamp(1rem, 1.6vw, 1.15rem);
   color: #b8b2a3;
+}
+
+/* The one deliberate touch of orchid (the cave's violet accent) anywhere
+   in this section -- a short rule under the intro, not a color repeated
+   throughout. */
+.selected-work__intro::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 2px;
+  margin: 2rem auto 0;
+  background: #9a5fa0;
+  opacity: 0.55;
 }
 
 /* Featured project (wide) + two smaller ones stacked beside it -- not
@@ -77,20 +98,24 @@
   border-color: rgba(201, 168, 106, 0.5);
   background: rgba(244, 241, 234, 0.04);
   transform: translateY(-4px);
+  /* Paired with the gold border so hover reads as two cave tones together
+     (light + water), not gold on its own. */
+  box-shadow: 0 12px 32px -16px rgba(44, 100, 89, 0.45);
 }
 
 /* Textured placeholder instead of a flat two-stop gradient -- layered
-   radial gradients in the site's own gold/moss palette, plus a very
-   faint grain, so an empty image slot still reads as considered rather
-   than as an obviously-blank box while real project imagery is pending. */
+   radial gradients pulling all three of the cave's sampled tones (gold
+   light-shaft, teal pool water, olive-moss wall), plus a very faint
+   grain, so an empty image slot still reads as "this cave" rather than
+   as an obviously-blank box while real project imagery is pending. */
 .work-card__image {
   aspect-ratio: 16 / 10;
   border-radius: 2px;
   margin-bottom: 1.25rem;
   background-image:
-    radial-gradient(circle at 20% 25%, rgba(201, 168, 106, 0.22), transparent 45%),
-    radial-gradient(circle at 80% 75%, rgba(94, 122, 92, 0.2), transparent 50%),
-    linear-gradient(135deg, rgba(20, 26, 22, 0.9), rgba(10, 9, 6, 0.95));
+    radial-gradient(circle at 18% 20%, rgba(201, 168, 106, 0.26), transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(92, 187, 163, 0.22), transparent 50%),
+    linear-gradient(135deg, rgba(35, 42, 26, 0.85), rgba(10, 9, 6, 0.95));
   position: relative;
   overflow: hidden;
 }

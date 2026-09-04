@@ -1,12 +1,56 @@
+/* #0a0906, not pure #000 -- the same "void" tone used across Selected Work
+   and FogOverlay's dark target, so the footer reads as the same shadow
+   rather than a slightly different black bolted onto the end. A faint
+   grain (matching the technique already used on .work-card__image::after)
+   and a corner moss vignette keep it from being a completely flat fill,
+   while staying a genuinely dark, uncluttered background as originally
+   asked for. */
 .contact-footer {
-  background: #000;
+  position: relative;
+  background:
+    radial-gradient(ellipse 55% 60% at 90% 100%, rgba(92, 111, 69, 0.07), transparent 60%),
+    #0a0906;
   color: #f4f1ea;
   padding: 16vh 6vw 6vh;
   text-align: center;
-  border-top: 1px solid rgba(244, 241, 234, 0.08);
+  /* Faint gold/moss tint instead of a plain neutral hairline, so the seam
+     with Selected Work above reads as part of the same palette. */
+  border-top: 1px solid rgba(180, 168, 120, 0.12);
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.7s ease, transform 0.7s ease;
+  overflow: hidden;
+}
+
+.contact-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* Same diagonal-hatch technique as .work-card__image::after, but that
+     one only ever covers a small card -- stretched across the whole
+     footer at the same opacity, the repeat became legible as a hazard-
+     stripe pattern instead of grain. Tighter spacing + lower opacity
+     keeps it a texture, not a visible line pattern. */
+  opacity: 0.02;
+  background-image: repeating-linear-gradient(
+    45deg,
+    #f4f1ea 0,
+    #f4f1ea 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+/* Absolute-positioned ::before otherwise paints above static in-flow
+   content regardless of source order (positioned descendants come after
+   non-positioned ones in the painting order) -- lift the real content
+   above it explicitly rather than let a 4.5%-opacity texture sit over
+   the email link and icons. */
+.contact-footer > * {
+  position: relative;
+  z-index: 1;
 }
 
 .contact-footer.is-visible {
@@ -69,6 +113,10 @@
   border-color: rgba(201, 168, 106, 0.6);
   color: #f4f1ea;
   transform: translateY(-2px);
+  /* Paired teal glow, mirroring the work-card hover treatment in Selected
+     Work -- the two sections share an interaction language, not just a
+     static palette. */
+  box-shadow: 0 6px 18px -8px rgba(44, 100, 89, 0.55);
 }
 
 .contact-footer__socials svg {
