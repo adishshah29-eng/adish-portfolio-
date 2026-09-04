@@ -4,6 +4,20 @@
   padding: 16vh 6vw 6vh;
   text-align: center;
   border-top: 1px solid rgba(244, 241, 234, 0.08);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.contact-footer.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-footer {
+    transition: none;
+  }
 }
 
 .contact-footer h2 {
@@ -33,23 +47,33 @@
 .contact-footer__socials {
   display: flex;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.75rem;
   flex-wrap: wrap;
   margin-bottom: 6vh;
 }
 
 .contact-footer__socials a {
-  font-family: system-ui, sans-serif;
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 241, 234, 0.14);
   color: #b8b2a3;
-  text-decoration: none;
-  transition: color 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.3s ease, color 0.3s ease;
 }
 
 .contact-footer__socials a:hover,
 .contact-footer__socials a:focus-visible {
+  border-color: rgba(201, 168, 106, 0.6);
   color: #f4f1ea;
+  transform: translateY(-2px);
+}
+
+.contact-footer__socials svg {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .contact-footer__meta {

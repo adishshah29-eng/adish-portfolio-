@@ -3,12 +3,21 @@
   background: #0a0906;
   color: #f4f1ea;
   padding: 14vh 6vw 16vh;
+  overflow: hidden;
 }
 
 .selected-work__intro {
   max-width: 640px;
   margin: 0 auto 8vh;
   text-align: center;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.selected-work__intro.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .selected-work__intro h2 {
@@ -26,12 +35,22 @@
   color: #b8b2a3;
 }
 
+/* Featured project (wide) + two smaller ones stacked beside it -- not
+   three equal cards. Degrades to one column on narrow viewports, in
+   which case the featured piece simply reads first. */
 .selected-work__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1.5fr 1fr;
   gap: 2.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  align-items: start;
+}
+
+.selected-work__secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
 }
 
 .work-card {
@@ -42,7 +61,15 @@
   border-radius: 4px;
   padding: 1.5rem;
   background: rgba(244, 241, 234, 0.02);
-  transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.3s ease, background 0.3s ease,
+    opacity 0.7s ease, translate 0.7s ease;
+  opacity: 0;
+  translate: 0 16px;
+}
+
+.work-card.is-visible {
+  opacity: 1;
+  translate: 0 0;
 }
 
 .work-card:hover,
@@ -52,11 +79,42 @@
   transform: translateY(-4px);
 }
 
+/* Textured placeholder instead of a flat two-stop gradient -- layered
+   radial gradients in the site's own gold/moss palette, plus a very
+   faint grain, so an empty image slot still reads as considered rather
+   than as an obviously-blank box while real project imagery is pending. */
 .work-card__image {
   aspect-ratio: 16 / 10;
   border-radius: 2px;
   margin-bottom: 1.25rem;
-  background: linear-gradient(135deg, rgba(201, 168, 106, 0.18), rgba(20, 26, 22, 0.6));
+  background-image:
+    radial-gradient(circle at 20% 25%, rgba(201, 168, 106, 0.22), transparent 45%),
+    radial-gradient(circle at 80% 75%, rgba(94, 122, 92, 0.2), transparent 50%),
+    linear-gradient(135deg, rgba(20, 26, 22, 0.9), rgba(10, 9, 6, 0.95));
+  position: relative;
+  overflow: hidden;
+}
+
+.work-card__image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: repeating-linear-gradient(
+    45deg,
+    #f4f1ea 0,
+    #f4f1ea 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+.work-card--featured .work-card__image {
+  aspect-ratio: 16 / 11;
+}
+
+.work-card--featured h3 {
+  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
 }
 
 .work-card h3 {
@@ -89,4 +147,17 @@
   border: 1px solid rgba(201, 168, 106, 0.35);
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
+}
+
+@media (max-width: 860px) {
+  .selected-work__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selected-work__intro,
+  .work-card {
+    transition: none;
+  }
 }
