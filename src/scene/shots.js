@@ -78,14 +78,19 @@ export const SHOTS = [
     heading: 'Still water',
     body: 'Where the fall settles, and the story rests.',
   },
-  // Chapter 2-3: these two shots jump to entirely separate backdrop
-  // "islands" far out on the world x-axis (see standaloneRect in
-  // CaveScene.jsx) rather than continuing to reframe the same photo --
-  // new compositions, not new crops of the original. The wide gap the
-  // camera crosses to reach them is empty space by construction (nothing
-  // is rendered between islands), which reads as the passage briefly
-  // darkening between chambers rather than as a rendering gap, as long as
-  // that crossing stays a single continuous pan.
+  // Chapter 2-3: both shots look at the SAME backdrop "island" (see
+  // standaloneRect/CHAPTER23_X in CaveScene.jsx) far out on the world
+  // x-axis rather than a slice of the main photo -- a new composition,
+  // but ONE new composition shared by both chapters, not two. The wide
+  // gap the camera crosses to reach it is empty space by construction
+  // (nothing is rendered between islands), which reads as the passage
+  // briefly darkening between chambers rather than as a rendering gap, as
+  // long as that crossing stays a single continuous pan. Within the
+  // island itself, chapter 2 is the wide arrival view (the full receding
+  // channel toward the lit archway) and chapter 3 dollies in closer and
+  // lower, toward the foreground rocks and water -- two framings of one
+  // segmented photo, exactly like chapter 1's shots are all one layer
+  // stack, not a new photo per shot.
   {
     id: 'waterfall-close',
     position: [32, 0.1, 6.5],
@@ -95,8 +100,8 @@ export const SHOTS = [
   },
   {
     id: 'surface-reflections',
-    position: [64, -0.25, 6.3],
-    target: [64, -0.3, -3],
+    position: [32, -0.3, 5.2],
+    target: [32, -0.45, -1.5],
     heading: 'Surface',
     body: "Even still water remembers where it's been.",
   },

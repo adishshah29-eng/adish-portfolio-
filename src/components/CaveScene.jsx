@@ -19,11 +19,12 @@ import rockVine4 from '../assets/patches/rock_vine_4.png'
 import stone1 from '../assets/patches/stone_1.png'
 import stone2 from '../assets/patches/stone_2.png'
 import stone3 from '../assets/patches/stone_3.png'
-import wfWaterPool from '../assets/chapters/wf_water_pool.png'
-import wfRockAndFalls from '../assets/chapters/wf_rock_and_falls.png'
-import wfBackgroundWalls from '../assets/chapters/wf_background_walls.png'
-import weWaterReflection from '../assets/chapters/we_water_reflection.png'
-import weRockRidge from '../assets/chapters/we_rock_ridge.png'
+import ch23Backdrop from '../assets/chapters23/ch23_backdrop.png'
+import ch23Structure from '../assets/chapters23/ch23_structure.png'
+import ch23Lightshaft from '../assets/chapters23/ch23_lightshaft.png'
+import ch23Water from '../assets/chapters23/ch23_water.png'
+import ch23RockLeft from '../assets/chapters23/ch23_rock_left.png'
+import ch23RockRight from '../assets/chapters23/ch23_rock_right.png'
 
 // Native canvas the layers were segmented from (px).
 const CANVAS_W = 1915
@@ -65,15 +66,18 @@ function patchFrame(imgW, imgH, scale, x, y) {
   return { x, y, w: (imgW * scale) / CANVAS_W, h: (imgH * scale) / CANVAS_H }
 }
 
-// Chapter backdrops (waterfall_base, water_edge_rocks) are entirely new
-// photo compositions, not slices of the main cave photo -- they have no
-// natural position in CANVAS_W/CANVAS_H space at all. Each one is placed
-// as its own self-contained "island": centered on a world x far enough
-// from the main cluster (and from each other) that their view frustums
-// never overlap at any camera position shots.js uses, sized to fill the
-// frame the way REF_W does for the main layers. The empty space the
-// camera crosses between islands reads as the passage darkening between
-// chambers -- deliberate, not a gap to hide (see shots.js).
+// The chapter 2/3 backdrop is an entirely new photo composition, not a
+// slice of the main cave photo -- it has no natural position in
+// CANVAS_W/CANVAS_H space at all. It's placed as its own self-contained
+// "island": centered on a world x far enough from the main cluster that
+// its view frustum never overlaps it at any camera position shots.js
+// uses, sized to fill the frame the way REF_W does for the main layers.
+// The empty space the camera crosses to reach it reads as the passage
+// darkening between chambers -- deliberate, not a gap to hide (see
+// shots.js). Chapters 2 and 3 both look at this SAME island -- two
+// different camera framings of one segmented photo (wide arrival vs. a
+// closer, lower reflection-level shot), matching how chapter 1 itself is
+// several shots against one layer stack, not a new photo per shot.
 function standaloneRect(imgW, imgH, depth, cx, cy) {
   const scale = (BASE_DIST - depth) / BASE_DIST
   const w = REF_W * scale
@@ -81,9 +85,10 @@ function standaloneRect(imgW, imgH, depth, cx, cy) {
   return { x: cx, y: cy, w, h }
 }
 
-// Each island center -- also referenced by shots.js for camera position/target.
-const CHAPTER2_X = 32
-const CHAPTER3_X = 64
+// Island center -- also referenced by shots.js for camera position/target.
+const CHAPTER23_X = 32
+const CH23_W = 1881
+const CH23_H = 836
 
 const LAYERS = [
   { tex: sourcePhoto, depth: -5.3, frame: { x: 0, y: 0, w: 1, h: 1 } },
@@ -104,14 +109,21 @@ const LAYERS = [
   { tex: stone1, depth: -1.4, frame: patchFrame(568, 231, 0.6, 0.0, 0.90) },
   { tex: stone2, depth: -1.4, frame: patchFrame(921, 225, 0.6, 0.34, 0.90) },
   { tex: stone3, depth: -1.4, frame: patchFrame(691, 236, 0.6, 0.78, 0.90) },
-  // chapter 2 island (waterfall_base source, split into 3 depth layers the
-  // same way the main cave photo was -- see segment_waterfall.py)
-  { tex: wfBackgroundWalls, depth: -5, rect: standaloneRect(1915, 821, -5, CHAPTER2_X, 0) },
-  { tex: wfRockAndFalls, depth: -3, rect: standaloneRect(1915, 821, -3, CHAPTER2_X, 0) },
-  { tex: wfWaterPool, depth: -1.3, rect: standaloneRect(1915, 821, -1.3, CHAPTER2_X, 0) },
-  // chapter 3 island (water_edge_rocks source, split into 2 depth layers)
-  { tex: weRockRidge, depth: -3.5, rect: standaloneRect(1839, 855, -3.5, CHAPTER3_X, -0.3) },
-  { tex: weWaterReflection, depth: -1.8, rect: standaloneRect(1839, 855, -1.8, CHAPTER3_X, -0.3) },
+  // Chapter 2/3 island: one photo (a receding water channel toward a lit
+  // archway, same visual language as the main cave -- mossy walls, hanging
+  // vines, orchid clusters, a warm god-ray, vivid teal pool) segmented into
+  // the same depth roles chapter 1 uses: opaque backdrop, wall/vine
+  // structure with the water cut out, an isolated light-shaft glow, the
+  // water pool, and foreground rock masses closest to camera. Two rocks
+  // (left/right) stand in for chapter 1's single foregroundRocks layer
+  // since this composition has a gap between them rather than one
+  // continuous foreground band.
+  { tex: ch23Backdrop, depth: -5.3, rect: standaloneRect(CH23_W, CH23_H, -5.3, CHAPTER23_X, 0) },
+  { tex: ch23Structure, depth: -4.6, rect: standaloneRect(CH23_W, CH23_H, -4.6, CHAPTER23_X, 0) },
+  { tex: ch23Lightshaft, depth: -3.9, rect: standaloneRect(CH23_W, CH23_H, -3.9, CHAPTER23_X, 0) },
+  { tex: ch23Water, depth: -3.2, rect: standaloneRect(CH23_W, CH23_H, -3.2, CHAPTER23_X, 0) },
+  { tex: ch23RockLeft, depth: -1.6, rect: standaloneRect(CH23_W, CH23_H, -1.6, CHAPTER23_X, 0) },
+  { tex: ch23RockRight, depth: -1.6, rect: standaloneRect(CH23_W, CH23_H, -1.6, CHAPTER23_X, 0) },
 ]
 
 function clamp(v, lo, hi) {
