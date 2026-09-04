@@ -1,12 +1,12 @@
 .scene-scroll {
-  /* 7 shots / 6 segments, each with a dwell-hold on both sides (see
-     DWELL_FRACTION in shots.js) -- this needs to be real scroll distance,
-     not just a proportional split, or "hold at each shot to give people
-     time to read" is meaningless on a short page. 1300vh = 1100vh of
-     shot sequence (the previously-tuned budget) plus the locked-camera
-     intro (INTRO_FRACTION in shots.js, 15% of the page) added on top,
+  /* Camera motion is continuous now (no dwell/hold plateau -- see
+     shots.js), so this no longer needs the inflated scroll distance that
+     was added purely to make each hold a generous real distance rather
+     than scroll-speed-dependent. 800vh = roughly the original pre-dwell
+     shot-sequence budget (700vh) plus the locked-camera name-reveal intro
+     (INTRO_FRACTION in shots.js, 15% of the page) added on top of that,
      not carved out of it. */
-  height: 1300vh;
+  height: 800vh;
 }
 
 .scene-sticky {

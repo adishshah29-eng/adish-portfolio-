@@ -28,8 +28,13 @@ const NAME_DEPTH = -1.5
 // "letters finish appearing" and "camera is now free to move" are the same
 // instant by construction, not two timings that happen to be tuned close.
 // After that, hold briefly, then dissolve as the shot sequence gets moving.
-const HOLD_FRACTION = 0.05
-const FADE_FRACTION = 0.06
+// Kept short on purpose: now that the shot sequence has no dwell/hold of
+// its own (see shots.js), shot 1's heading starts crossfading in almost
+// immediately once the camera is free to move, so this needs to fully
+// clear before that -- a longer hold here used to be safe only because
+// the old dwell zone kept shot 1 from appearing for a while regardless.
+const HOLD_FRACTION = 0.02
+const FADE_FRACTION = 0.04
 
 // How many characters' worth of transition each letter takes to fade in,
 // as the reveal front passes it -- a soft cascade rather than a hard

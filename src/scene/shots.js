@@ -1,28 +1,16 @@
 // The scroll-driven camera path for the cave scene. Each shot is an
 // authored camera position + look-at target in world units, plus the text
 // that reads while that shot is on screen. Order here is playback order --
-// scroll maps linearly onto this list, shot i sitting at progress i/(N-1).
+// scroll maps linearly onto this list, shot i sitting at progress i/(N-1),
+// eased-interpolated continuously between consecutive shots as you scroll.
 //
-// This is a portfolio, not a demo reel -- a reader has to actually be able
-// to read each line before the camera moves on, and a fast scroll (a
-// single mobile swipe especially) must not be able to blow straight past
-// a shot without ever landing on it. So the mapping isn't a continuous
-// pan across the whole gap between shots: each shot gets a DWELL zone
-// (camera fully holds at its exact position, text fully visible -- real
-// reading time, guaranteed by scroll distance rather than scroll speed)
-// bracketing a shorter TRANSITION zone where the camera actually moves.
-// See getShotState in CaveScene.jsx and the matching window in
-// StoryText.jsx (both read this same constant so camera holds and text
-// visibility line up exactly).
-//
-// Fraction of each inter-shot segment held at the FROM shot before the
-// transition starts (and, symmetrically, at the TO shot after it ends).
-// Interior shots get this held on both sides (from the tail of the
-// incoming segment and the head of the outgoing one), so they read for
-// roughly 2x this fraction of a segment; the two end shots (nothing
-// before shot 0, nothing after the last one) only get it once, at the
-// scroll extremes where the page can't scroll further anyway.
-export const DWELL_FRACTION = 0.38
+// A previous version pinned each shot with a hard hold-move-hold structure
+// (the camera fully freezing at each shot for a wide DWELL zone before it
+// was allowed to move again). That made scrolling feel unresponsive --
+// long stretches where scroll input visibly did nothing -- so it's gone;
+// motion now tracks scroll directly the whole way, with only the shot-to-
+// shot easing (smoothstep in getShotState) softening the very start/end of
+// each transition, not a standalone held plateau.
 
 // The page opens on a locked intro: "Adish Portfolio" wipes in
 // letter-by-letter as the very first bit of scroll (see AdishName.jsx),
