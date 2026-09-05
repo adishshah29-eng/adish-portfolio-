@@ -42,41 +42,51 @@ export function remapAfterIntro(progress) {
 // within about 1.5 world units of center) -- enough to read as the camera
 // settling on a different part of the cave, never enough to rotate past
 // what the photo actually contains.
+// Chapter 1 -- "about us." Headings are unchanged (they already fit
+// what's on screen); only the bodies changed, from pure atmosphere to
+// the real arc underneath it: an AI/ML student in Mumbai (start-left),
+// the first thing he ever shipped (top-left, the 2025 Parmar Properties
+// stint -- Callnex + a voice bot), the main role running now (top-center,
+// Resunova), the second one running alongside it (right, "mirror" being
+// literal here -- two concurrent internships), and the unpaid one he
+// still built anyway (middle, DJS ASTRA). One resume fact per shot, kept
+// to a single plain sentence so it reads as continuous with the shots
+// around it, not a bio dropped into the middle of one.
 export const SHOTS = [
   {
     id: 'start-left',
     position: [-0.35, 0.04, 9.2],
     target: [-1.0, 0.05, 0],
     heading: 'The Hollow',
-    body: 'An entrance carved by water and time.',
+    body: 'An AI and Machine Learning student, in Mumbai, who builds.',
   },
   {
     id: 'top-left',
     position: [-0.4, 0.16, 6.4],
     target: [-1.3, 0.55, 0],
     heading: 'Bloom in the dark',
-    body: 'Life finds the narrowest ledge to hold onto.',
+    body: 'A telecalling app, a voice bot: the first thing shipped.',
   },
   {
     id: 'top-center',
     position: [0, 0.18, 6.1],
     target: [0, 0.9, 0],
     heading: 'Light finds a way',
-    body: 'A single opening, and everything below answers to it.',
+    body: 'Now building inside an AI platform, for a team abroad.',
   },
   {
     id: 'right',
     position: [0.4, 0.16, 6.4],
     target: [1.3, 0.55, 0],
     heading: 'Mirror bloom',
-    body: 'The same story, told again on the other wall.',
+    body: 'The same drive, running two internships at once.',
   },
   {
     id: 'middle',
     position: [0, -0.04, 7.6],
     target: [0, -0.4, 0],
     heading: 'Still water',
-    body: 'Where the fall settles, and the story rests.',
+    body: 'And a robotics team’s website, built for no pay, just because.',
   },
   // Chapter 2-3: all five of these shots look at the SAME backdrop
   // "island" (see standaloneRect/CHAPTER23_X in CaveScene.jsx) far out on
@@ -92,40 +102,48 @@ export const SHOTS = [
   // and lower toward the water for a quieter final beat -- the same
   // "camera moment" chapter 1 has, applied to this photo instead of a
   // new one per shot.
+  // Chapter 2-3 -- "toolkit and skills." Five shots, five skill
+  // categories straight from the resume's own grouping (Languages /
+  // Frontend / Backend & Databases / AI & Automation / Tools), one per
+  // shot, in that order. The named-items-plus-consequence shape ("X, Y,
+  // Z: <what they do>") is deliberately more itemized than chapter 1's
+  // plain prose -- a toolkit is a list by nature, and the shift in
+  // cadence marks these as a different kind of content without breaking
+  // from the water/light/structure imagery the rest of the scene uses.
   {
     id: 'waterfall-close',
     position: [32, 0.1, 6.5],
     target: [32, 0, -3],
     heading: 'Where it falls',
-    body: 'Water finds rock, and both are shaped by the meeting.',
+    body: 'Python, Java, JavaScript: the water finds its rock.',
   },
   {
     id: 'left-bank',
     position: [31.6, 0.15, 5.9],
     target: [30.7, 0.45, -2],
     heading: 'Holding on',
-    body: 'Each ledge holds another bloom, further than the light reaches.',
+    body: 'React, Next.js, GSAP: each ledge holding up the interface.',
   },
   {
     id: 'light-source',
     position: [32, 0.2, 5.3],
     target: [32, 0.7, -4],
     heading: 'The source',
-    body: 'Every ray in this place begins here.',
+    body: 'Node, Firebase, Supabase: where every request begins.',
   },
   {
     id: 'right-bank',
     position: [32.4, 0.15, 5.9],
     target: [33.3, 0.45, -2],
     heading: 'The far bank',
-    body: 'The same procession, mirrored on the other side.',
+    body: 'n8n, Vapi, Claude: the same work, newer hands.',
   },
   {
     id: 'surface-reflections',
     position: [32, -0.3, 5.2],
     target: [32, -0.45, -1.5],
     heading: 'Surface',
-    body: "Even still water remembers where it's been.",
+    body: 'Git remembers every version. Vercel ships the one that matters.',
   },
   // Final beat: the camera pushes further in and centers on the archway's
   // light source, deeper than any shot before it, while FogOverlay (see
